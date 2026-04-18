@@ -1,19 +1,22 @@
 exports.handler = async () => {
   try {
     const res = await fetch(
-      "https://itf.minkabu.jp/fund/0331418A",
+      "https://itf.minkabu.jp/fund/0331418A/daily_price",
       {
         headers: {
-          "User-Agent": "Mozilla/5.0",
-          "Accept": "text/html"
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          "Accept": "application/json, text/plain, */*",
+          "Referer": "https://itf.minkabu.jp/fund/0331418A"
         }
       }
     );
-    const html = await res.text();
-    const match = html.match(/基準価額[^0-9]*([0-9,]+)円/);
-    const price = match ? parseInt(match[1].replace(/,/g, "")) : null;
+    const text = await res.text();
 
-    if (!price) throw new Error("取得失敗");
+    // 数字を含むJSONまたはテキストから価格を抽出
+    const match = text.match(/"close"\s*:\s*([0-9.]+)/);
+    const price = match ? Math.round(parseFloat(match[1])) : null;
+
+    if (!price) throw new Error("パース失敗: " + text.slice(0, 200));
 
     return {
       statusCode: 200,
