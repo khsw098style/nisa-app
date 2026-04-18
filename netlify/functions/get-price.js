@@ -1,10 +1,11 @@
 exports.handler = async () => {
   try {
+    // 投資信託協会のCSVデータから取得
     const res = await fetch(
-      "https://itf.minkabu.jp/fund/0331418A",
+      "https://toushin-lib.fwg.ne.jp/FdsWeb/FDST030000?isinCd=JP90C000H1T1",
       {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
           "Accept": "text/html,application/xhtml+xml",
           "Accept-Language": "ja,en;q=0.9",
         }
@@ -12,26 +13,12 @@ exports.handler = async () => {
     );
     const html = await res.text();
 
-    // 複数パターンで基準価額を探す
-    const patterns = [
-      /(\d{2,3},\d{3})<\/span>\s*円/,
-      /"nav_price"\s*:\s*"?([0-9,]+)"?/,
-      /基準価格[^\d]*(\d{2,3},\d{3})/,
-      /(\d{2,3},\d{3})\s*円.*?基準/,
-    ];
+    // 基準価額を抽出
+    const match = html.match(/([0-9]{2},?[0-9]{3})\s*円/);
+    const price = match ? parseInt(match[1].replace(/,/g, "")) : null;
 
-    let price = null;
-    for (const pattern of patterns) {
-      const match = html.match(pattern);
-      if (match) {
-        price = parseInt(match[1].replace(/,/g, ""));
-        break;
-      }
-    }
-
-    // デバッグ用：HTMLの一部を返す
     if (!price) {
-      const snippet = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 500);
+      const snippet = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 300);
       throw new Error("価格未検出: " + snippet);
     }
 
