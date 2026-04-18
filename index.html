@@ -19,6 +19,8 @@
   --gold-light: #fdf3e0;
   --red: #d94f3d;
   --red-light: #fdecea;
+  --teal: #5a9e98;
+  --teal-light: #eaf4f3;
   --bg: #f5f7f6;
   --white: #ffffff;
   --charcoal: #1c2b24;
@@ -33,36 +35,27 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { font-family: var(--font); background: var(--bg); color: var(--charcoal); min-height: 100dvh; max-width: 430px; margin: 0 auto; }
 
-/* ヘッダー */
 .header {
-  background: var(--green);
-  color: white;
+  background: var(--green); color: white;
   padding: 20px 20px 16px;
   padding-top: max(20px, env(safe-area-inset-top));
 }
 .header-top { display: flex; align-items: flex-start; justify-content: space-between; }
-.app-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.app-title { font-size: 18px; font-weight: 700; }
 .app-sub { font-size: 11px; opacity: 0.7; margin-top: 2px; }
 .price-badge {
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 99px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex; align-items: center; gap: 6px;
-  cursor: pointer;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 99px; padding: 5px 12px; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
 }
 .price-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-/* ナビ */
 .bottom-nav {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 430px;
   background: var(--white); border-top: 1px solid var(--border);
-  display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-  z-index: 100;
+  display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 100;
 }
 .nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -72,56 +65,62 @@ body { font-family: var(--font); background: var(--bg); color: var(--charcoal); 
 .nav-item.active { color: var(--green); }
 .nav-icon { font-size: 20px; }
 
-/* ページ */
 .page { display: none; padding: 16px 16px 100px; animation: fadeIn 0.2s ease; }
 .page.active { display: block; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
 
-/* カード */
 .card { background: var(--white); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 8px var(--shadow); margin-bottom: 12px; }
-.card-title { font-size: 13px; color: var(--mid); font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.card-title { font-size: 13px; color: var(--mid); font-weight: 500; margin-bottom: 10px; }
+.section-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
 
-/* サマリーカード */
-.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.summary-card {
-  background: var(--white); border-radius: var(--radius-sm); padding: 14px;
-  box-shadow: 0 2px 8px var(--shadow); border-top: 3px solid var(--green);
+/* 実績カード */
+.actual-total {
+  background: linear-gradient(135deg, var(--green) 0%, #2d9e6f 100%);
+  border-radius: var(--radius); padding: 20px; color: white; margin-bottom: 12px;
+  position: relative; overflow: hidden;
 }
+.actual-total::after { content: '💴'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 48px; opacity: 0.2; }
+.actual-label { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+.actual-amount { font-size: 32px; font-weight: 700; line-height: 1; }
+.actual-sub { font-size: 11px; opacity: 0.75; margin-top: 6px; }
+
+.breakdown-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.breakdown-row:last-child { border-bottom: none; }
+.breakdown-label { font-size: 13px; color: var(--mid); }
+.breakdown-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 99px;
+  background: var(--green-light); color: var(--green); font-weight: 700; margin-left: 6px;
+}
+.breakdown-badge.gold { background: var(--gold-light); color: var(--gold); }
+.breakdown-val { font-size: 15px; font-weight: 700; color: var(--charcoal); }
+
+/* サマリーグリッド */
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.summary-card { background: var(--white); border-radius: var(--radius-sm); padding: 14px; box-shadow: 0 2px 8px var(--shadow); border-top: 3px solid var(--green); }
 .summary-card.gold { border-top-color: var(--gold); }
-.summary-card.red { border-top-color: var(--red); }
 .summary-label { font-size: 11px; color: var(--mid); margin-bottom: 4px; }
 .summary-val { font-size: 20px; font-weight: 700; color: var(--green); line-height: 1.1; }
 .summary-card.gold .summary-val { color: var(--gold); }
-.summary-card.red .summary-val { font-size: 16px; color: var(--red); }
 .summary-sub { font-size: 10px; color: var(--light); margin-top: 3px; }
 
 /* スライダー */
 .slider-group { margin-bottom: 14px; }
 .slider-label { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 6px; }
 .slider-val { font-weight: 700; color: var(--green); font-size: 15px; }
-input[type=range] {
-  width: 100%; height: 4px; border-radius: 99px;
-  background: var(--border); outline: none; -webkit-appearance: none; cursor: pointer;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--green); box-shadow: 0 2px 6px var(--shadow); cursor: pointer;
-}
+input[type=range] { width: 100%; height: 4px; border-radius: 99px; background: var(--border); outline: none; -webkit-appearance: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--green); box-shadow: 0 2px 6px var(--shadow); cursor: pointer; }
 
-/* 年利比較テーブル */
+/* 年利タブ */
 .rate-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-.rate-tab {
-  padding: 6px 14px; border-radius: 99px; border: 1.5px solid var(--border);
-  background: var(--white); font-size: 12px; font-weight: 700; color: var(--mid);
-  cursor: pointer; font-family: var(--font); transition: all 0.15s;
-}
+.rate-tab { padding: 6px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--white); font-size: 12px; font-weight: 700; color: var(--mid); cursor: pointer; font-family: var(--font); transition: all 0.15s; }
 .rate-tab.active { background: var(--green); border-color: var(--green); color: white; }
 
-/* グラフ */
 .chart-wrap { position: relative; overflow: hidden; }
 canvas { width: 100% !important; }
 
-/* 比較テーブル */
 .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .compare-table th { background: var(--green-light); color: var(--green); font-weight: 700; padding: 8px 6px; text-align: right; border-bottom: 2px solid var(--border); }
 .compare-table th:first-child { text-align: left; }
@@ -135,40 +134,53 @@ canvas { width: 100% !important; }
 .dip-card { border-left: 3px solid var(--gold); background: var(--gold-light); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; }
 .dip-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
 .dip-text { font-size: 12px; color: var(--charcoal); line-height: 1.6; }
-.dip-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.dip-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .dip-row:last-child { border-bottom: none; }
 .dip-row-label { font-size: 13px; font-weight: 500; }
 .dip-row-price { font-size: 15px; font-weight: 700; color: var(--red); }
 .dip-row-add { font-size: 12px; color: var(--mid); }
-.gain-badge { display: inline-block; background: var(--green-light); color: var(--green); border-radius: 99px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
 
-/* 現在価格入力 */
+/* 入金履歴 */
+.history-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.history-item:last-child { border-bottom: none; }
+.history-date { font-size: 11px; color: var(--mid); flex-shrink: 0; }
+.history-label { font-size: 13px; flex: 1; }
+.history-amount { font-size: 14px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+.history-delete { background: none; border: none; color: var(--light); cursor: pointer; font-size: 14px; flex-shrink: 0; }
+.history-delete:hover { color: var(--red); }
+.empty-history { text-align: center; padding: 20px; color: var(--light); font-size: 13px; }
+
+/* 入金フォーム */
+.add-form { background: var(--teal-light); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 12px; }
+.add-form-title { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 10px; }
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.form-input {
+  flex: 1; min-width: 100px; padding: 9px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font);
+  background: var(--white); color: var(--charcoal); outline: none;
+}
+.form-input:focus { border-color: var(--teal); }
+.form-select { flex: 1; min-width: 120px; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font); background: var(--white); color: var(--charcoal); outline: none; }
+.form-select:focus { border-color: var(--teal); }
+.add-btn-full { width: 100%; background: var(--teal); color: white; border: none; border-radius: var(--radius-sm); padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font); transition: background 0.15s; }
+.add-btn-full:active { background: #3d7a75; }
+
+/* 価格入力 */
 .price-input-wrap { display: flex; align-items: center; gap: 8px; }
-.price-input {
-  flex: 1; padding: 10px 12px; border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm); font-size: 16px; font-family: var(--font);
-  background: var(--bg); color: var(--charcoal); outline: none;
-  transition: border-color 0.15s;
-}
+.price-input { flex: 1; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: var(--font); background: var(--bg); color: var(--charcoal); outline: none; }
 .price-input:focus { border-color: var(--green); }
-.price-update-btn {
-  background: var(--green); color: white; border: none;
-  border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px;
-  font-weight: 700; cursor: pointer; font-family: var(--font);
-  white-space: nowrap;
-}
+.price-update-btn { background: var(--green); color: white; border: none; border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font); white-space: nowrap; }
 
-/* セクション見出し */
-.section-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-
-/* ルールリスト */
+/* ルール */
 .rule-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .rule-item:last-child { border-bottom: none; }
-.rule-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.rule-icon { font-size: 20px; flex-shrink: 0; }
 .rule-label { font-size: 12px; color: var(--mid); }
 .rule-val { font-size: 14px; font-weight: 700; margin-top: 2px; }
 
-/* トースト */
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--charcoal); color: white; padding: 10px 20px; border-radius: 99px; font-size: 13px; opacity: 0; transition: all 0.2s; z-index: 300; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -181,7 +193,7 @@ canvas { width: 100% !important; }
       <div class="app-title">📈 NISA運用ダッシュボード</div>
       <div class="app-sub">eMAXIS Slim 全世界株式（オール・カントリー）</div>
     </div>
-    <div class="price-badge" onclick="gotoPage('rules', document.querySelectorAll('.nav-item')[2])">
+    <div class="price-badge">
       <div class="price-dot"></div>
       <span id="header-price">35,500円</span>
     </div>
@@ -190,16 +202,36 @@ canvas { width: 100% !important; }
 
 <!-- ホーム -->
 <div class="page active" id="page-home">
-  <div class="summary-grid">
-    <div class="summary-card">
-      <div class="summary-label">📅 現在の積立額/月</div>
-      <div class="summary-val" id="home-monthly">5万円</div>
-      <div class="summary-sub">5月〜 変更済み</div>
+
+  <!-- 実績積立額 -->
+  <div class="actual-total">
+    <div class="actual-label">現在の積立総額（実績）</div>
+    <div class="actual-amount" id="actual-total-val">―</div>
+    <div class="actual-sub" id="actual-date-label">―</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💰 積立内訳</div>
+    <div class="breakdown-row">
+      <div>
+        <span class="breakdown-label">積立枠</span>
+        <span class="breakdown-badge">つみたて投資枠</span>
+      </div>
+      <div class="breakdown-val" id="actual-tsumitate">―</div>
     </div>
-    <div class="summary-card gold">
-      <div class="summary-label">⭐ 目標年数</div>
-      <div class="summary-val" id="home-years">20年</div>
-      <div class="summary-sub">スライダーで変更</div>
+    <div class="breakdown-row">
+      <div>
+        <span class="breakdown-label">成長枠（初期一括）</span>
+        <span class="breakdown-badge gold">成長投資枠</span>
+      </div>
+      <div class="breakdown-val">360,000円</div>
+    </div>
+    <div class="breakdown-row">
+      <div>
+        <span class="breakdown-label">成長枠（追加入金）</span>
+        <span class="breakdown-badge gold">下落時</span>
+      </div>
+      <div class="breakdown-val" id="actual-additional">0円</div>
     </div>
   </div>
 
@@ -214,7 +246,7 @@ canvas { width: 100% !important; }
     </div>
     <div class="summary-grid" style="margin-bottom:0">
       <div class="summary-card" style="border-top-color:#5a9e98">
-        <div class="summary-label">💰 積立総額</div>
+        <div class="summary-label">💰 積立総額（予測）</div>
         <div class="summary-val" style="color:#5a9e98;font-size:17px" id="sim-invested">―</div>
       </div>
       <div class="summary-card">
@@ -225,7 +257,7 @@ canvas { width: 100% !important; }
   </div>
 
   <div class="card">
-    <div class="card-title">📊 年利別・最終残高比較</div>
+    <div class="card-title">📊 年利別・残高推移</div>
     <div class="rate-tabs">
       <button class="rate-tab active" data-rate="3" onclick="setRateTab(3,this)">年利3%</button>
       <button class="rate-tab" data-rate="5" onclick="setRateTab(5,this)">年利5%</button>
@@ -240,13 +272,7 @@ canvas { width: 100% !important; }
   <div class="card">
     <div class="card-title">🏆 20年後の残高比較</div>
     <table class="compare-table">
-      <thead>
-        <tr>
-          <th>年利</th>
-          <th>10年後</th>
-          <th>20年後</th>
-        </tr>
-      </thead>
+      <thead><tr><th>年利</th><th>10年後</th><th>20年後</th></tr></thead>
       <tbody id="compare-tbody"></tbody>
     </table>
   </div>
@@ -262,7 +288,7 @@ canvas { width: 100% !important; }
   <div class="card">
     <div class="card-title">💹 現在の基準価格</div>
     <div class="price-input-wrap">
-      <input class="price-input" type="number" id="base-price-input" value="35500" placeholder="35500">
+      <input class="price-input" type="number" id="base-price-input" value="35500">
       <button class="price-update-btn" onclick="updatePrice()">更新</button>
     </div>
     <div style="font-size:11px;color:var(--mid);margin-top:8px">※ 毎日手動で更新してください</div>
@@ -270,6 +296,30 @@ canvas { width: 100% !important; }
 
   <div class="section-title">📉 下落ラインと追加投資額</div>
   <div class="card" id="dip-levels-card"></div>
+
+  <!-- 追加入金履歴 -->
+  <div class="section-title">📝 追加入金履歴</div>
+
+  <div class="add-form">
+    <div class="add-form-title">＋ 追加入金を記録</div>
+    <div class="form-row">
+      <input class="form-input" type="date" id="inp-date" style="flex:1.2">
+      <select class="form-select" id="inp-dip-level">
+        <option value="-10%下落">-10%下落</option>
+        <option value="-20%下落">-20%下落</option>
+        <option value="-30%下落">-30%下落</option>
+        <option value="-40%以上">-40%以上</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <input class="form-input" type="number" id="inp-amount" placeholder="入金額（例：300000）" style="flex:1">
+    </div>
+    <button class="add-btn-full" onclick="addDipHistory()">記録する</button>
+  </div>
+
+  <div class="card" id="dip-history-card">
+    <div class="empty-history">まだ追加入金の記録がありません</div>
+  </div>
 
   <div class="card">
     <div class="card-title">📈 追加投資ありvsなし（5%・20年）</div>
@@ -283,23 +333,14 @@ canvas { width: 100% !important; }
   </div>
 </div>
 
-<!-- ルール確認 -->
+<!-- ルール -->
 <div class="page" id="page-rules">
   <div class="section-title">📋 NISA運用ルール</div>
   <div class="card" id="rules-card"></div>
-
   <div class="section-title" style="margin-top:4px">💡 年利別シミュレーション（年末残高）</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="compare-table" style="margin:0">
-      <thead>
-        <tr>
-          <th>年</th>
-          <th>3%</th>
-          <th>5%</th>
-          <th>7%</th>
-          <th>10%</th>
-        </tr>
-      </thead>
+      <thead><tr><th>年</th><th>3%</th><th>5%</th><th>7%</th><th>10%</th></tr></thead>
       <tbody id="full-table"></tbody>
     </table>
   </div>
@@ -327,22 +368,20 @@ const SUMMARY = {
   7:  [537634,1197783,1904142,2659947,3468659,4333980,5259873,6250579,7310634,8444894,9658551,10957165,12346681,13833464,15424321,17126538,18947911,20896780,22982069,25213329],
   10: [545065,1231598,1986785,2817491,3731267,4736420,5842089,7058325,8396184,9867829,11486639,13267330,15226090,17380726,19750825,22357935,25225755,28380357,31850420,35667489]
 };
-
 const DIP = {
-  noDip: [532638,1175399,1850298,2558942,3303018,4084297,4904641,5766002,6670431,7620082,8617215,9664204,10763543,11917850,13129871,14402493,15738747,17141813,18615033,20161913],
+  noDip:   [532638,1175399,1850298,2558942,3303018,4084297,4904641,5766002,6670431,7620082,8617215,9664204,10763543,11917850,13129871,14402493,15738747,17141813,18615033,20161913],
   withDip: [532638,1476621,2166581,2891039,3651720,4450435,5289086,6169669,7094281,8065124,9084509,10154864,11278736,12458801,13697870,14998893,16364966,17799344,19305440,20886840]
 };
-
 const RULES = [
   { icon:'💴', label:'基準価格', val:'35,500円（2026/4/18時点）' },
   { icon:'📦', label:'投資商品', val:'eMAXIS Slim 全世界株式（オール・カントリー）' },
-  { icon:'📅', label:'積立（〜4月）', val:'30,000円/月' },
-  { icon:'📅', label:'積立（5月〜）', val:'50,000円/月' },
+  { icon:'📅', label:'積立（〜4月）', val:'30,000円/月（27日）' },
+  { icon:'📅', label:'積立（5月〜）', val:'50,000円/月（27日）' },
+  { icon:'💰', label:'成長枠（初期）', val:'360,000円（2026年3月一括）' },
   { icon:'📌', label:'運用ルール', val:'積立継続 ＋ 下落時のみ追加投資' },
   { icon:'💰', label:'追加投資額', val:'各30万円（成長投資枠）' },
   { icon:'⚠️', label:'-40%以上', val:'要検討（イレギュラー対応）' },
 ];
-
 const DIP_LEVELS = [
   { label:'-10%ライン', pct:0.10, add:'30万円追加' },
   { label:'-20%ライン', pct:0.20, add:'30万円追加' },
@@ -350,16 +389,125 @@ const DIP_LEVELS = [
   { label:'-40%以上',  pct:0.40, add:'要検討' },
 ];
 
+// ── 積立スケジュール ──
+// 開始：2026年3月（成長枠36万一括＋積立3万）
+// 毎月27日に積立
+// 〜4月：3万/月、5月〜：5万/月
+const START_YEAR = 2026;
+const START_MONTH = 3; // 3月
+const TSUMITATE_DAY = 27;
+const GROWTH_INITIAL = 360000;
+
+function calcActualInvested() {
+  const now = new Date();
+  const nowY = now.getFullYear();
+  const nowM = now.getMonth() + 1;
+  const nowD = now.getDate();
+
+  let tsumitate = 0;
+
+  // 2026年3月から現在まで月ごとに計算
+  let y = START_YEAR, m = START_MONTH;
+  while (y < nowY || (y === nowY && m <= nowM)) {
+    // 今月の場合、27日を過ぎているかチェック
+    const isCurrent = (y === nowY && m === nowM);
+    const passed27 = isCurrent ? nowD >= TSUMITATE_DAY : true;
+
+    if (passed27) {
+      // 5月以降は5万、それ以前は3万
+      if (y > 2026 || (y === 2026 && m >= 5)) {
+        tsumitate += 50000;
+      } else {
+        tsumitate += 30000;
+      }
+    }
+
+    // 次の月へ
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+
+  return tsumitate;
+}
+
+function getAdditionalTotal() {
+  const history = loadHistory();
+  return history.reduce((sum, h) => sum + h.amount, 0);
+}
+
+function renderActualInvested() {
+  const tsumitate = calcActualInvested();
+  const additional = getAdditionalTotal();
+  const total = tsumitate + GROWTH_INITIAL + additional;
+
+  document.getElementById('actual-total-val').textContent = total.toLocaleString() + '円';
+  document.getElementById('actual-tsumitate').textContent = tsumitate.toLocaleString() + '円';
+  document.getElementById('actual-additional').textContent = additional.toLocaleString() + '円';
+
+  const now = new Date();
+  document.getElementById('actual-date-label').textContent =
+    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日時点`;
+}
+
+// ── 入金履歴 ──
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem('nisa-dip-history') || '[]'); } catch(e) { return []; }
+}
+function saveHistory(h) { localStorage.setItem('nisa-dip-history', JSON.stringify(h)); }
+
+function addDipHistory() {
+  const date = document.getElementById('inp-date').value;
+  const level = document.getElementById('inp-dip-level').value;
+  const amount = parseInt(document.getElementById('inp-amount').value);
+
+  if (!date) { showToast('日付を入力してください'); return; }
+  if (!amount || amount < 1) { showToast('入金額を入力してください'); return; }
+
+  const history = loadHistory();
+  history.unshift({ id: Date.now(), date, level, amount });
+  saveHistory(history);
+  renderDipHistory();
+  renderActualInvested();
+  document.getElementById('inp-amount').value = '';
+  showToast('✅ 入金履歴を記録しました');
+}
+
+function deleteDipHistory(id) {
+  const history = loadHistory().filter(h => h.id !== id);
+  saveHistory(history);
+  renderDipHistory();
+  renderActualInvested();
+  showToast('🗑 履歴を削除しました');
+}
+
+function renderDipHistory() {
+  const card = document.getElementById('dip-history-card');
+  const history = loadHistory();
+  if (!history.length) {
+    card.innerHTML = '<div class="empty-history">まだ追加入金の記録がありません</div>';
+    return;
+  }
+  card.innerHTML = history.map(h => `
+    <div class="history-item">
+      <div class="history-date">${h.date.replace(/-/g,'/')}</div>
+      <div class="history-label">${h.level}に伴う入金</div>
+      <div class="history-amount">${h.amount.toLocaleString()}円</div>
+      <button class="history-delete" onclick="deleteDipHistory(${h.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+// ── 初期化 ──
 let basePrice = parseInt(localStorage.getItem('nisa-base-price') || '35500');
 let currentRate = 5;
 
-function fmt(n) { return (Math.round(n/10000)).toLocaleString() + '万円'; }
-function fmtFull(n) { return Math.round(n).toLocaleString() + '円'; }
-
-// ── 初期化 ──
 document.getElementById('base-price-input').value = basePrice;
 document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
+document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
+
+renderActualInvested();
 renderDipLevels();
+renderDipHistory();
 renderRules();
 renderCompareTable();
 renderFullTable();
@@ -372,31 +520,21 @@ function gotoPage(id, btn) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'home') { setTimeout(() => { drawMainChart(); }, 50); }
-  if (id === 'dip') { setTimeout(() => { drawDipChart(); }, 50); }
+  if (id === 'home') setTimeout(() => drawMainChart(), 50);
+  if (id === 'dip') setTimeout(() => drawDipChart(), 50);
 }
 
 // ── シミュレーション ──
 function updateSim() {
   const y = parseInt(document.getElementById('year-slider').value);
   document.getElementById('year-val').textContent = y + '年後';
-  document.getElementById('home-years').textContent = y + '年';
-  const monthly = y <= 1 ? '3〜5万円' : '5万円';
-  document.getElementById('home-monthly').textContent = monthly;
-
-  // 積立総額計算（1年目は1〜4月3万、5〜12月5万）
   let invested = 0;
   for (let i = 1; i <= y; i++) {
-    if (i === 1) invested += 30000*4 + 50000*8;
-    else invested += 50000*12;
+    invested += i === 1 ? 30000*2 + 50000*8 + GROWTH_INITIAL : 50000*12;
   }
-
   const bal = SUMMARY[5][y-1];
-  const gain = bal - invested;
-
   document.getElementById('sim-invested').textContent = fmt(invested);
-  document.getElementById('sim-gain').textContent = '+' + fmt(gain);
-
+  document.getElementById('sim-gain').textContent = '+' + fmt(bal - invested);
   drawMainChart(y);
 }
 
@@ -407,202 +545,123 @@ function setRateTab(r, el) {
   drawMainChart();
 }
 
-// ── グラフ描画（軽量Canvas） ──
+function fmt(n) { return Math.round(n/10000).toLocaleString() + '万円'; }
+
+// ── グラフ ──
 function drawMainChart(highlightYear) {
   const canvas = document.getElementById('main-chart');
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.offsetWidth; const H = 200;
-  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.width = W*dpr; canvas.height = H*dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-
   const data = SUMMARY[currentRate];
   const max = Math.max(...data);
-  const pad = { top:20, right:16, bottom:30, left:52 };
-  const w = W - pad.left - pad.right;
-  const h = H - pad.top - pad.bottom;
-
+  const pad = {top:20,right:16,bottom:30,left:52};
+  const w = W-pad.left-pad.right, h = H-pad.top-pad.bottom;
   ctx.clearRect(0,0,W,H);
-
-  // グリッド
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.top + (h/4)*i;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+w, y);
-    ctx.strokeStyle = '#dde8e3'; ctx.lineWidth = 0.5; ctx.stroke();
-    const val = Math.round(max*(4-i)/4/10000);
-    ctx.fillStyle = '#5a7268'; ctx.font = '10px Noto Sans JP';
-    ctx.textAlign = 'right';
-    ctx.fillText(val + '万', pad.left - 4, y + 4);
+  for (let i=0;i<=4;i++) {
+    const y = pad.top+(h/4)*i;
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+w,y);
+    ctx.strokeStyle='#dde8e3'; ctx.lineWidth=0.5; ctx.stroke();
+    ctx.fillStyle='#5a7268'; ctx.font='10px Noto Sans JP'; ctx.textAlign='right';
+    ctx.fillText(Math.round(max*(4-i)/4/10000)+'万', pad.left-4, y+4);
   }
-
-  // X軸ラベル
-  ctx.fillStyle = '#5a7268'; ctx.textAlign = 'center'; ctx.font = '10px Noto Sans JP';
-  [5,10,15,20].forEach(y => {
-    const x = pad.left + (y-1)/(data.length-1)*w;
-    ctx.fillText(y+'年', x, H - 6);
-  });
-
-  // 積立額ライン
-  const invested = data.map((_,i) => {
-    let v = 0;
-    for (let j = 0; j <= i; j++) v += j===0 ? 30000*4+50000*8 : 50000*12;
-    return v;
-  });
+  ctx.fillStyle='#5a7268'; ctx.textAlign='center'; ctx.font='10px Noto Sans JP';
+  [5,10,15,20].forEach(y => ctx.fillText(y+'年', pad.left+(y-1)/(data.length-1)*w, H-6));
+  const grad = ctx.createLinearGradient(0,pad.top,0,pad.top+h);
+  grad.addColorStop(0,'rgba(45,158,111,0.3)'); grad.addColorStop(1,'rgba(45,158,111,0)');
   ctx.beginPath();
-  invested.forEach((v,i) => {
-    const x = pad.left + i/(data.length-1)*w;
-    const y = pad.top + (1 - v/max)*h;
-    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-  });
-  ctx.strokeStyle = '#a8bdb5'; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]); ctx.stroke();
-  ctx.setLineDash([]);
-
-  // 残高ライン
-  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top+h);
-  grad.addColorStop(0, 'rgba(45,158,111,0.3)');
-  grad.addColorStop(1, 'rgba(45,158,111,0.0)');
-
+  data.forEach((v,i) => { const x=pad.left+i/(data.length-1)*w, y=pad.top+(1-v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.lineTo(pad.left+w,pad.top+h); ctx.lineTo(pad.left,pad.top+h); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
   ctx.beginPath();
-  data.forEach((v,i) => {
-    const x = pad.left + i/(data.length-1)*w;
-    const y = pad.top + (1 - v/max)*h;
-    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-  });
-  const lastX = pad.left+w; const lastY = pad.top+h;
-  ctx.lineTo(lastX,lastY); ctx.lineTo(pad.left,lastY); ctx.closePath();
-  ctx.fillStyle = grad; ctx.fill();
-
-  ctx.beginPath();
-  data.forEach((v,i) => {
-    const x = pad.left + i/(data.length-1)*w;
-    const y = pad.top + (1 - v/max)*h;
-    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-  });
-  ctx.strokeStyle = '#2d9e6f'; ctx.lineWidth = 2.5; ctx.stroke();
-
-  // ハイライト点
-  const hy = (highlightYear || parseInt(document.getElementById('year-slider').value)) - 1;
-  const hx = pad.left + hy/(data.length-1)*w;
-  const hyy = pad.top + (1 - data[hy]/max)*h;
-  ctx.beginPath(); ctx.arc(hx, hyy, 5, 0, Math.PI*2);
-  ctx.fillStyle = '#1a6b4a'; ctx.fill();
-  ctx.fillStyle = '#1a6b4a'; ctx.font = 'bold 11px Noto Sans JP'; ctx.textAlign = 'center';
-  ctx.fillText(fmt(data[hy]), hx, hyy - 10);
+  data.forEach((v,i) => { const x=pad.left+i/(data.length-1)*w, y=pad.top+(1-v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.strokeStyle='#2d9e6f'; ctx.lineWidth=2.5; ctx.stroke();
+  const hy=(highlightYear||parseInt(document.getElementById('year-slider').value))-1;
+  const hx=pad.left+hy/(data.length-1)*w, hyy=pad.top+(1-data[hy]/max)*h;
+  ctx.beginPath(); ctx.arc(hx,hyy,5,0,Math.PI*2); ctx.fillStyle='#1a6b4a'; ctx.fill();
+  ctx.fillStyle='#1a6b4a'; ctx.font='bold 11px Noto Sans JP'; ctx.textAlign='center';
+  ctx.fillText(fmt(data[hy]),hx,hyy-10);
 }
 
 function drawDipChart() {
   const canvas = document.getElementById('dip-chart');
   if (!canvas) return;
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.offsetWidth; const H = 220;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  const d1 = DIP.withDip; const d2 = DIP.noDip;
-  const max = Math.max(...d1);
-  const pad = { top:20, right:16, bottom:30, left:56 };
-  const w = W - pad.left - pad.right;
-  const h = H - pad.top - pad.bottom;
-
+  const dpr = window.devicePixelRatio||1;
+  const W=canvas.offsetWidth; const H=220;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const d1=DIP.withDip, d2=DIP.noDip, max=Math.max(...d1);
+  const pad={top:20,right:16,bottom:30,left:56};
+  const w=W-pad.left-pad.right, h=H-pad.top-pad.bottom;
   ctx.clearRect(0,0,W,H);
-
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.top + (h/4)*i;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+w, y);
-    ctx.strokeStyle = '#dde8e3'; ctx.lineWidth = 0.5; ctx.stroke();
-    ctx.fillStyle = '#5a7268'; ctx.font = '10px Noto Sans JP'; ctx.textAlign = 'right';
-    ctx.fillText(Math.round(max*(4-i)/4/10000)+'万', pad.left-4, y+4);
+  for (let i=0;i<=4;i++) {
+    const y=pad.top+(h/4)*i;
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+w,y);
+    ctx.strokeStyle='#dde8e3'; ctx.lineWidth=0.5; ctx.stroke();
+    ctx.fillStyle='#5a7268'; ctx.font='10px Noto Sans JP'; ctx.textAlign='right';
+    ctx.fillText(Math.round(max*(4-i)/4/10000)+'万',pad.left-4,y+4);
   }
-  [5,10,15,20].forEach(y => {
-    ctx.fillStyle='#5a7268'; ctx.textAlign='center'; ctx.font='10px Noto Sans JP';
-    ctx.fillText(y+'年', pad.left+(y-1)/(d1.length-1)*w, H-6);
-  });
-
+  [5,10,15,20].forEach(y => { ctx.fillStyle='#5a7268'; ctx.textAlign='center'; ctx.font='10px Noto Sans JP'; ctx.fillText(y+'年',pad.left+(y-1)/(d1.length-1)*w,H-6); });
   [[d2,'#a8bdb5',1.5],[d1,'#2d9e6f',2.5]].forEach(([data,color,lw]) => {
     ctx.beginPath();
-    data.forEach((v,i) => {
-      const x = pad.left + i/(data.length-1)*w;
-      const y = pad.top + (1 - v/max)*h;
-      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-    });
-    ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
+    data.forEach((v,i) => { const x=pad.left+i/(data.length-1)*w, y=pad.top+(1-v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.stroke();
   });
 }
 
 // ── 価格更新 ──
 function updatePrice() {
   const v = parseInt(document.getElementById('base-price-input').value);
-  if (!v || v < 1000) { showToast('正しい価格を入力してください'); return; }
+  if (!v||v<1000) { showToast('正しい価格を入力してください'); return; }
   basePrice = v;
   localStorage.setItem('nisa-base-price', v);
-  document.getElementById('header-price').textContent = v.toLocaleString() + '円';
+  document.getElementById('header-price').textContent = v.toLocaleString()+'円';
   renderDipLevels();
   showToast('✅ 基準価格を更新しました');
 }
 
-// ── 下落レンダリング ──
 function renderDipLevels() {
-  const card = document.getElementById('dip-levels-card');
-  card.innerHTML = DIP_LEVELS.map(d => {
-    const price = Math.round(basePrice * (1 - d.pct));
-    const isIrr = d.pct >= 0.4;
+  document.getElementById('dip-levels-card').innerHTML = DIP_LEVELS.map(d => {
+    const price = Math.round(basePrice*(1-d.pct));
     return `<div class="dip-row">
-      <div>
-        <div class="dip-row-label">${d.label}</div>
-        <div class="dip-row-add">${d.add}</div>
-      </div>
+      <div><div class="dip-row-label">${d.label}</div><div class="dip-row-add">${d.add}</div></div>
       <div style="text-align:right">
-        <div class="dip-row-price" style="${isIrr?'color:var(--mid)':''}">≈ ${price.toLocaleString()}円</div>
+        <div class="dip-row-price" style="${d.pct>=0.4?'color:var(--mid)':''}">≈ ${price.toLocaleString()}円</div>
         <div style="font-size:10px;color:var(--light)">▼${Math.round(d.pct*100)}%</div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ── ルール ──
 function renderRules() {
   document.getElementById('rules-card').innerHTML = RULES.map(r =>
     `<div class="rule-item"><div class="rule-icon">${r.icon}</div><div><div class="rule-label">${r.label}</div><div class="rule-val">${r.val}</div></div></div>`
   ).join('');
 }
 
-// ── 比較テーブル ──
 function renderCompareTable() {
-  const rates = [3,5,7,10];
-  document.getElementById('compare-tbody').innerHTML = rates.map(r => {
-    const y10 = SUMMARY[r][9]; const y20 = SUMMARY[r][19];
-    const isMax10 = r === 10; const isMax20 = r === 10;
-    return `<tr>
-      <td>年利${r}%</td>
-      <td class="${isMax10?'best-val':''}">${fmt(y10)}</td>
-      <td class="${isMax20?'best-val':''}">${fmt(y20)}</td>
-    </tr>`;
-  }).join('');
+  document.getElementById('compare-tbody').innerHTML = [3,5,7,10].map(r =>
+    `<tr><td>年利${r}%</td><td class="${r===10?'best-val':''}">${fmt(SUMMARY[r][9])}</td><td class="${r===10?'best-val':''}">${fmt(SUMMARY[r][19])}</td></tr>`
+  ).join('');
 }
 
-// ── 全テーブル ──
 function renderFullTable() {
-  document.getElementById('full-table').innerHTML = Array.from({length:20},(_,i)=>{
-    const y = i+1;
-    const max = Math.max(SUMMARY[3][i],SUMMARY[5][i],SUMMARY[7][i],SUMMARY[10][i]);
-    return `<tr>
-      <td>${y}年</td>
-      ${[3,5,7,10].map(r=>`<td class="${SUMMARY[r][i]===max?'best-val':''}">${fmt(SUMMARY[r][i])}</td>`).join('')}
-    </tr>`;
+  document.getElementById('full-table').innerHTML = Array.from({length:20},(_,i) => {
+    const max = Math.max(...[3,5,7,10].map(r=>SUMMARY[r][i]));
+    return `<tr><td>${i+1}年</td>${[3,5,7,10].map(r=>`<td class="${SUMMARY[r][i]===max?'best-val':''}">${fmt(SUMMARY[r][i])}</td>`).join('')}</tr>`;
   }).join('');
 }
 
-// ── トースト ──
 let tt;
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(tt); tt = setTimeout(()=>el.classList.remove('show'),2500);
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('show'),2500);
 }
 
-// ── リサイズ対応 ──
 window.addEventListener('resize', () => {
   if (document.getElementById('page-home').classList.contains('active')) drawMainChart();
   if (document.getElementById('page-dip').classList.contains('active')) drawDipChart();
@@ -617,17 +676,14 @@ async function fetchLatestPrice() {
       basePrice = parseInt(data.price);
       localStorage.setItem('nisa-base-price', basePrice);
       document.getElementById('base-price-input').value = basePrice;
-      document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
+      document.getElementById('header-price').textContent = basePrice.toLocaleString()+'円';
       renderDipLevels();
-      showToast('📈 基準価額を更新しました：' + basePrice.toLocaleString() + '円');
+      showToast('📈 基準価額を更新しました：'+basePrice.toLocaleString()+'円');
     }
-  } catch(e) {
-    console.log('価格取得失敗、保存済み価格を使用');
-  }
+  } catch(e) { console.log('価格取得失敗'); }
 }
 fetchLatestPrice();
-  
-// Service Worker
+
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
