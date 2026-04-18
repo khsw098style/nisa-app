@@ -608,6 +608,25 @@ window.addEventListener('resize', () => {
   if (document.getElementById('page-dip').classList.contains('active')) drawDipChart();
 });
 
+// 基準価額の自動取得
+async function fetchLatestPrice() {
+  try {
+    const res = await fetch('/.netlify/functions/get-price');
+    const data = await res.json();
+    if (data.price) {
+      basePrice = parseInt(data.price);
+      localStorage.setItem('nisa-base-price', basePrice);
+      document.getElementById('base-price-input').value = basePrice;
+      document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
+      renderDipLevels();
+      showToast('📈 基準価額を更新しました：' + basePrice.toLocaleString() + '円');
+    }
+  } catch(e) {
+    console.log('価格取得失敗、保存済み価格を使用');
+  }
+}
+fetchLatestPrice();
+  
 // Service Worker
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
