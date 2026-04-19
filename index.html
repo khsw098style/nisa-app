@@ -646,13 +646,29 @@ function gotoPage(id, btn) {
 function updateSim() {
   const y = parseInt(document.getElementById('year-slider').value);
   document.getElementById('year-val').textContent = y + '年後';
-  let invested = 0;
+
+  // 積立総額予測：成長枠初期360,000＋積立枠（3・4月3万、5月〜5万）＋追加入金
+  let tsumitateProjected = 0;
   for (let i = 1; i <= y; i++) {
-    invested += i === 1 ? 30000*2 + 50000*8 + GROWTH_INITIAL : 50000*12;
+    if (i === 1) tsumitateProjected += 30000 * 2 + 50000 * 8; // 3・4月3万、5〜12月5万
+    else tsumitateProjected += 50000 * 12;
   }
-  const bal = SUMMARY[5][y-1];
+  const additional = getAdditionalTotal();
+  const invested = tsumitateProjected + GROWTH_INITIAL + additional;
+
+  // 運用益：SUMMARY[5]は旧ベースなので、実際の積立額ベースで複利計算
+  const rate = 0.05;
+  let bal = 0;
+  for (let i = 1; i <= y; i++) {
+    const yearDeposit = i === 1
+      ? 30000*2 + 50000*8 + GROWTH_INITIAL + additional
+      : 50000*12;
+    bal = (bal + yearDeposit) * (1 + rate);
+  }
+
+  const gain = bal - invested;
   document.getElementById('sim-invested').textContent = fmt(invested);
-  document.getElementById('sim-gain').textContent = '+' + fmt(bal - invested);
+  document.getElementById('sim-gain').textContent = (gain >= 0 ? '+' : '') + fmt(gain);
   drawMainChart(y);
 }
 
