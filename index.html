@@ -181,6 +181,38 @@ canvas { width: 100% !important; }
 .rule-label { font-size: 12px; color: var(--mid); }
 .rule-val { font-size: 14px; font-weight: 700; margin-top: 2px; }
 
+/* NISA枠 */
+.quota-card {
+  background: var(--white); border-radius: var(--radius); padding: 16px;
+  box-shadow: 0 2px 8px var(--shadow); margin-bottom: 12px;
+}
+.quota-title { font-size: 13px; color: var(--mid); font-weight: 500; margin-bottom: 12px; }
+.quota-row { margin-bottom: 14px; }
+.quota-row:last-child { margin-bottom: 0; }
+.quota-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.quota-label { font-size: 13px; font-weight: 700; }
+.quota-remain { font-size: 13px; font-weight: 700; color: var(--green); }
+.quota-remain.warn { color: var(--gold); }
+.quota-remain.full { color: var(--red); }
+.quota-bar-track { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+.quota-bar-fill { height: 100%; border-radius: 99px; background: var(--green); transition: width 0.5s ease; }
+.quota-bar-fill.gold { background: var(--gold); }
+.quota-bar-fill.teal { background: var(--teal); }
+.quota-sub { display: flex; justify-content: space-between; font-size: 10px; color: var(--light); }
+.lifetime-banner {
+  background: linear-gradient(135deg, #1c2b24 0%, #2d4a38 100%);
+  border-radius: var(--radius); padding: 16px 20px; color: white; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.lifetime-left .lf-label { font-size: 11px; opacity: 0.7; margin-bottom: 4px; }
+.lifetime-left .lf-remain { font-size: 26px; font-weight: 700; line-height: 1; }
+.lifetime-left .lf-sub { font-size: 10px; opacity: 0.6; margin-top: 4px; }
+.lifetime-right { text-align: right; }
+.lifetime-right .lf-pct { font-size: 28px; font-weight: 700; color: #4ade80; }
+.lifetime-right .lf-pct-label { font-size: 10px; opacity: 0.6; }
+.lifetime-bar-track { height: 6px; background: rgba(255,255,255,0.2); border-radius: 99px; overflow: hidden; margin-top: 12px; }
+.lifetime-bar-fill { height: 100%; border-radius: 99px; background: #4ade80; transition: width 0.5s ease; }
+
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--charcoal); color: white; padding: 10px 20px; border-radius: 99px; font-size: 13px; opacity: 0; transition: all 0.2s; z-index: 300; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -232,6 +264,42 @@ canvas { width: 100% !important; }
         <span class="breakdown-badge gold">下落時</span>
       </div>
       <div class="breakdown-val" id="actual-additional">0円</div>
+    </div>
+  </div>
+
+  <!-- NISA枠残り -->
+  <div class="lifetime-banner" style="position:relative;overflow:hidden">
+    <div class="lifetime-left">
+      <div class="lf-label">生涯投資枠 残り</div>
+      <div class="lf-remain" id="lifetime-remain">―</div>
+      <div class="lf-sub" id="lifetime-used">使用済み ―／1,800万円</div>
+    </div>
+    <div class="lifetime-right">
+      <div class="lf-pct" id="lifetime-pct">―%</div>
+      <div class="lf-pct-label">使用率</div>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:5px;background:rgba(255,255,255,0.15);border-radius:0 0 16px 16px;overflow:hidden">
+      <div id="lifetime-bar" style="height:100%;background:#4ade80;border-radius:0 0 16px 16px;transition:width 0.5s;width:0%"></div>
+    </div>
+  </div>
+
+  <div class="quota-card">
+    <div class="quota-title">📅 今年（2026年）の年間枠</div>
+    <div class="quota-row">
+      <div class="quota-head">
+        <span class="quota-label">つみたて投資枠</span>
+        <span class="quota-remain" id="tsumitate-remain">残り―</span>
+      </div>
+      <div class="quota-bar-track"><div class="quota-bar-fill teal" id="tsumitate-bar" style="width:0%"></div></div>
+      <div class="quota-sub"><span id="tsumitate-used">使用 ―</span><span>上限 120万円</span></div>
+    </div>
+    <div class="quota-row">
+      <div class="quota-head">
+        <span class="quota-label">成長投資枠</span>
+        <span class="quota-remain" id="growth-remain">残り―</span>
+      </div>
+      <div class="quota-bar-track"><div class="quota-bar-fill gold" id="growth-bar" style="width:0%"></div></div>
+      <div class="quota-sub"><span id="growth-used">使用 ―</span><span>上限 240万円</span></div>
     </div>
   </div>
 
@@ -435,6 +503,54 @@ function getAdditionalTotal() {
   return history.reduce((sum, h) => sum + h.amount, 0);
 }
 
+// ── NISA枠計算 ──
+const LIFETIME_LIMIT = 18000000;      // 生涯投資枠
+const TSUMITATE_LIMIT = 1200000;      // つみたて投資枠（年間）
+const GROWTH_LIMIT = 2400000;         // 成長投資枠（年間）
+
+function calcNisaQuota() {
+  const tsumitate = calcActualInvested(); // 積立枠使用額（27日判定済み）
+  const additional = getAdditionalTotal(); // 追加入金（下落時）
+
+  // 今年の枠使用額
+  const thisYearTsumitate = tsumitate;   // 今年の積立枠
+  const thisYearGrowth = GROWTH_INITIAL + additional; // 今年の成長枠
+
+  // 生涯枠使用額（積立＋成長初期＋追加）
+  const lifetimeUsed = tsumitate + GROWTH_INITIAL + additional;
+  const lifetimeRemain = LIFETIME_LIMIT - lifetimeUsed;
+  const lifetimePct = Math.min(100, Math.round(lifetimeUsed / LIFETIME_LIMIT * 100));
+
+  // 年間残り
+  const tsumitateRemain = Math.max(0, TSUMITATE_LIMIT - thisYearTsumitate);
+  const growthRemain = Math.max(0, GROWTH_LIMIT - thisYearGrowth);
+  const tsuminatePct = Math.min(100, Math.round(thisYearTsumitate / TSUMITATE_LIMIT * 100));
+  const growthPct = Math.min(100, Math.round(thisYearGrowth / GROWTH_LIMIT * 100));
+
+  // 表示更新
+  document.getElementById('lifetime-remain').textContent = fmtMan(lifetimeRemain);
+  document.getElementById('lifetime-used').textContent = `使用済み ${fmtMan(lifetimeUsed)}／1,800万円`;
+  document.getElementById('lifetime-pct').textContent = lifetimePct + '%';
+  document.getElementById('lifetime-bar').style.width = lifetimePct + '%';
+
+  const trEl = document.getElementById('tsumitate-remain');
+  trEl.textContent = '残り ' + fmtMan(tsumitateRemain);
+  trEl.className = 'quota-remain' + (tsuminatePct >= 90 ? ' full' : tsuminatePct >= 70 ? ' warn' : '');
+  document.getElementById('tsumitate-bar').style.width = tsuminatePct + '%';
+  document.getElementById('tsumitate-used').textContent = '使用 ' + fmtMan(thisYearTsumitate);
+
+  const grEl = document.getElementById('growth-remain');
+  grEl.textContent = '残り ' + fmtMan(growthRemain);
+  grEl.className = 'quota-remain' + (growthPct >= 90 ? ' full' : growthPct >= 70 ? ' warn' : '');
+  document.getElementById('growth-bar').style.width = growthPct + '%';
+  document.getElementById('growth-used').textContent = '使用 ' + fmtMan(thisYearGrowth);
+}
+
+function fmtMan(n) {
+  if (n >= 10000) return Math.floor(n / 10000) + '万' + (n % 10000 > 0 ? (n % 10000).toLocaleString() : '') + '円';
+  return n.toLocaleString() + '円';
+}
+
 function renderActualInvested() {
   const tsumitate = calcActualInvested();
   const additional = getAdditionalTotal();
@@ -447,6 +563,8 @@ function renderActualInvested() {
   const now = new Date();
   document.getElementById('actual-date-label').textContent =
     `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日時点`;
+
+  calcNisaQuota();
 }
 
 // ── 入金履歴 ──
