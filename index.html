@@ -213,6 +213,29 @@ canvas { width: 100% !important; }
 .lifetime-bar-track { height: 6px; background: rgba(255,255,255,0.2); border-radius: 99px; overflow: hidden; margin-top: 12px; }
 .lifetime-bar-fill { height: 100%; border-radius: 99px; background: #4ade80; transition: width 0.5s ease; }
 
+/* 年切り替え */
+.year-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--white); border-radius: var(--radius-sm);
+  padding: 10px 14px; margin-bottom: 12px;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.year-nav-btn {
+  background: none; border: none; cursor: pointer; font-size: 20px;
+  color: var(--mid); padding: 4px 8px; border-radius: 8px; transition: background 0.15s;
+  font-family: var(--font);
+}
+.year-nav-btn:hover { background: var(--sand); }
+.year-nav-btn:disabled { color: var(--light); cursor: not-allowed; }
+.year-nav-label { font-size: 16px; font-weight: 700; color: var(--charcoal); }
+.year-nav-sub { font-size: 10px; color: var(--mid); text-align: center; margin-top: 2px; }
+.year-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 700; margin-left: 6px;
+}
+.year-badge.current { background: var(--green-light); color: var(--green); }
+.year-badge.past { background: var(--sand, #f2ede5); color: var(--mid); }
+.year-badge.future { background: var(--teal-light); color: var(--teal); }
+
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--charcoal); color: white; padding: 10px 20px; border-radius: 99px; font-size: 13px; opacity: 0; transition: all 0.2s; z-index: 300; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -235,9 +258,19 @@ canvas { width: 100% !important; }
 <!-- ホーム -->
 <div class="page active" id="page-home">
 
+  <!-- 年切り替え -->
+  <div class="year-nav">
+    <button class="year-nav-btn" id="year-prev-btn" onclick="changeYear(-1)">‹</button>
+    <div style="text-align:center">
+      <div class="year-nav-label" id="year-nav-label">2026年</div>
+      <div class="year-nav-sub" id="year-nav-sub">読み込み中...</div>
+    </div>
+    <button class="year-nav-btn" id="year-next-btn" onclick="changeYear(1)">›</button>
+  </div>
+
   <!-- 実績積立額 -->
   <div class="actual-total">
-    <div class="actual-label">現在の積立総額（実績）</div>
+    <div class="actual-label" id="actual-label">現在の積立総額（実績）</div>
     <div class="actual-amount" id="actual-total-val">―</div>
     <div class="actual-sub" id="actual-date-label">―</div>
   </div>
@@ -251,12 +284,12 @@ canvas { width: 100% !important; }
       </div>
       <div class="breakdown-val" id="actual-tsumitate">―</div>
     </div>
-    <div class="breakdown-row">
+    <div class="breakdown-row" id="growth-initial-row">
       <div>
         <span class="breakdown-label">成長枠（初期一括）</span>
         <span class="breakdown-badge gold">成長投資枠</span>
       </div>
-      <div class="breakdown-val">360,000円</div>
+      <div class="breakdown-val" id="actual-growth-initial">360,000円</div>
     </div>
     <div class="breakdown-row">
       <div>
@@ -284,7 +317,7 @@ canvas { width: 100% !important; }
   </div>
 
   <div class="quota-card">
-    <div class="quota-title">📅 今年（2026年）の年間枠</div>
+    <div class="quota-title" id="quota-year-title">📅 2026年の年間枠</div>
     <div class="quota-row">
       <div class="quota-head">
         <span class="quota-label">つみたて投資枠</span>
@@ -457,45 +490,106 @@ const DIP_LEVELS = [
   { label:'-40%以上',  pct:0.40, add:'要検討' },
 ];
 
-// ── 積立スケジュール ──
-// 開始：2026年3月（成長枠36万一括＋積立3万）
-// 毎月27日に積立
-// 〜4月：3万/月、5月〜：5万/月
-const START_YEAR = 2026;
-const START_MONTH = 3; // 3月
+// ── 年切り替え ──
+const START_NISA_YEAR = 2026; // NISAスタート年
+let viewYear = new Date().getFullYear(); // 表示中の年
+
+function changeYear(delta) {
+  viewYear += delta;
+  renderYearView();
+}
+
+function renderYearView() {
+  const currentYear = new Date().getFullYear();
+  const label = document.getElementById('year-nav-label');
+  const sub = document.getElementById('year-nav-sub');
+  const prevBtn = document.getElementById('year-prev-btn');
+  const nextBtn = document.getElementById('year-next-btn');
+  const actualLabel = document.getElementById('actual-label');
+
+  label.textContent = viewYear + '年';
+  prevBtn.disabled = viewYear <= START_NISA_YEAR;
+
+  if (viewYear === currentYear) {
+    sub.textContent = '当年度';
+    actualLabel.textContent = '積立総額（実績）';
+  } else if (viewYear < currentYear) {
+    sub.textContent = '過去の記録';
+    actualLabel.textContent = viewYear + '年の積立総額';
+  } else {
+    sub.textContent = '未来の予定';
+    actualLabel.textContent = viewYear + '年の積立予定';
+  }
+
+  renderActualInvested();
+}
+
+// ── 積立計算（年指定対応） ──
+function calcTsumitateForYear(year) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentDay = now.getDate();
+
+  let tsumitate = 0;
+
+  // スタート年より前は0
+  if (year < START_NISA_YEAR) return 0;
+
+  for (let m = 1; m <= 12; m++) {
+    // スタート：2026年3月から
+    if (year === START_NISA_YEAR && m < START_MONTH) continue;
+
+    // 未来年度はスキップ（ただし未来日付の追加入金は別途処理）
+    if (year > currentYear) break;
+
+    // 当年の場合、27日を過ぎた月のみカウント
+    if (year === currentYear) {
+      if (m > currentMonth) break;
+      if (m === currentMonth && currentDay < TSUMITATE_DAY) break;
+    }
+
+    // 積立額：2026年5月以降は5万、それ以前は3万
+    if (year > 2026 || (year === 2026 && m >= 5)) {
+      tsumitate += 50000;
+    } else {
+      tsumitate += 30000;
+    }
+  }
+
+  return tsumitate;
+}
+
+// 成長枠初期：2026年のみ
+function getGrowthInitialForYear(year) {
+  return year === START_NISA_YEAR ? GROWTH_INITIAL : 0;
+}
+
+// 追加入金：指定年の合計
+function getAdditionalForYear(year) {
+  const history = loadHistory();
+  return history
+    .filter(h => new Date(h.date).getFullYear() === year)
+    .reduce((sum, h) => sum + h.amount, 0);
+}
+
+// 生涯累計（指定年末まで）
+function calcLifetimeUsed(upToYear) {
+  let total = 0;
+  for (let y = START_NISA_YEAR; y <= upToYear; y++) {
+    total += calcTsumitateForYear(y) + getGrowthInitialForYear(y) + getAdditionalForYear(y);
+  }
+  return total;
+}
+
+// ── 積立スケジュール定数 ──
+const START_NISA_YEAR = 2026;
+const START_MONTH = 3;
 const TSUMITATE_DAY = 27;
 const GROWTH_INITIAL = 360000;
 
 function calcActualInvested() {
-  const now = new Date();
-  const nowY = now.getFullYear();
-  const nowM = now.getMonth() + 1;
-  const nowD = now.getDate();
-
-  let tsumitate = 0;
-
-  // 2026年3月から現在まで月ごとに計算
-  let y = START_YEAR, m = START_MONTH;
-  while (y < nowY || (y === nowY && m <= nowM)) {
-    // 今月の場合、27日を過ぎているかチェック
-    const isCurrent = (y === nowY && m === nowM);
-    const passed27 = isCurrent ? nowD >= TSUMITATE_DAY : true;
-
-    if (passed27) {
-      // 5月以降は5万、それ以前は3万
-      if (y > 2026 || (y === 2026 && m >= 5)) {
-        tsumitate += 50000;
-      } else {
-        tsumitate += 30000;
-      }
-    }
-
-    // 次の月へ
-    m++;
-    if (m > 12) { m = 1; y++; }
-  }
-
-  return tsumitate;
+  return calcTsumitateForYear(new Date().getFullYear());
 }
 
 function getAdditionalTotal() {
@@ -509,41 +603,50 @@ const TSUMITATE_LIMIT = 1200000;      // つみたて投資枠（年間）
 const GROWTH_LIMIT = 2400000;         // 成長投資枠（年間）
 
 function calcNisaQuota() {
-  const tsumitate = calcActualInvested(); // 積立枠使用額（27日判定済み）
-  const additional = getAdditionalTotal(); // 追加入金（下落時）
+  const currentYear = new Date().getFullYear();
 
-  // 今年の枠使用額
-  const thisYearTsumitate = tsumitate;   // 今年の積立枠
-  const thisYearGrowth = GROWTH_INITIAL + additional; // 今年の成長枠
+  // 表示年の年間使用額
+  const tsumitate = calcTsumitateForYear(viewYear);
+  const growthInitial = getGrowthInitialForYear(viewYear);
+  const additional = getAdditionalForYear(viewYear);
+  const thisYearGrowth = growthInitial + additional;
 
-  // 生涯枠使用額（積立＋成長初期＋追加）
-  const lifetimeUsed = tsumitate + GROWTH_INITIAL + additional;
-  const lifetimeRemain = LIFETIME_LIMIT - lifetimeUsed;
+  // 生涯枠：表示年末までの累計（当年以前）または現時点まで
+  const lifetimeUsed = viewYear <= currentYear
+    ? calcLifetimeUsed(viewYear)
+    : calcLifetimeUsed(currentYear);
+  const lifetimeRemain = Math.max(0, LIFETIME_LIMIT - lifetimeUsed);
   const lifetimePct = Math.min(100, Math.round(lifetimeUsed / LIFETIME_LIMIT * 100));
 
   // 年間残り
-  const tsumitateRemain = Math.max(0, TSUMITATE_LIMIT - thisYearTsumitate);
+  const tsumitateRemain = Math.max(0, TSUMITATE_LIMIT - tsumitate);
   const growthRemain = Math.max(0, GROWTH_LIMIT - thisYearGrowth);
-  const tsuminatePct = Math.min(100, Math.round(thisYearTsumitate / TSUMITATE_LIMIT * 100));
+  const tsuminatePct = Math.min(100, Math.round(tsumitate / TSUMITATE_LIMIT * 100));
   const growthPct = Math.min(100, Math.round(thisYearGrowth / GROWTH_LIMIT * 100));
 
-  // 表示更新
+  // 生涯枠
   document.getElementById('lifetime-remain').textContent = fmtMan(lifetimeRemain);
   document.getElementById('lifetime-used').textContent = `使用済み ${fmtMan(lifetimeUsed)}／1,800万円`;
   document.getElementById('lifetime-pct').textContent = lifetimePct + '%';
   document.getElementById('lifetime-bar').style.width = lifetimePct + '%';
 
+  // つみたて投資枠
   const trEl = document.getElementById('tsumitate-remain');
   trEl.textContent = '残り ' + fmtMan(tsumitateRemain);
   trEl.className = 'quota-remain' + (tsuminatePct >= 90 ? ' full' : tsuminatePct >= 70 ? ' warn' : '');
   document.getElementById('tsumitate-bar').style.width = tsuminatePct + '%';
-  document.getElementById('tsumitate-used').textContent = '使用 ' + fmtMan(thisYearTsumitate);
+  document.getElementById('tsumitate-used').textContent = '使用 ' + fmtMan(tsumitate);
 
+  // 成長投資枠
   const grEl = document.getElementById('growth-remain');
   grEl.textContent = '残り ' + fmtMan(growthRemain);
   grEl.className = 'quota-remain' + (growthPct >= 90 ? ' full' : growthPct >= 70 ? ' warn' : '');
   document.getElementById('growth-bar').style.width = growthPct + '%';
   document.getElementById('growth-used').textContent = '使用 ' + fmtMan(thisYearGrowth);
+
+  // 年間枠タイトルを表示年に更新
+  const quotaTitle = document.getElementById('quota-year-title');
+  if (quotaTitle) quotaTitle.textContent = `📅 ${viewYear}年の年間枠`;
 }
 
 function fmtMan(n) {
@@ -552,17 +655,32 @@ function fmtMan(n) {
 }
 
 function renderActualInvested() {
-  const tsumitate = calcActualInvested();
-  const additional = getAdditionalTotal();
-  const total = tsumitate + GROWTH_INITIAL + additional;
+  const now = new Date();
+  const currentYear = now.getFullYear();
+
+  const tsumitate = calcTsumitateForYear(viewYear);
+  const growthInitial = getGrowthInitialForYear(viewYear);
+  const additional = getAdditionalForYear(viewYear);
+  const total = tsumitate + growthInitial + additional;
 
   document.getElementById('actual-total-val').textContent = total.toLocaleString() + '円';
   document.getElementById('actual-tsumitate').textContent = tsumitate.toLocaleString() + '円';
   document.getElementById('actual-additional').textContent = additional.toLocaleString() + '円';
 
-  const now = new Date();
-  document.getElementById('actual-date-label').textContent =
-    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日時点`;
+  // 成長枠初期：2026年のみ表示、他年は0円
+  const growthRow = document.getElementById('growth-initial-row');
+  if (growthRow) growthRow.style.display = growthInitial > 0 ? '' : 'none';
+  const growthInitialEl = document.getElementById('actual-growth-initial');
+  if (growthInitialEl) growthInitialEl.textContent = growthInitial.toLocaleString() + '円';
+
+  if (viewYear === currentYear) {
+    document.getElementById('actual-date-label').textContent =
+      `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日時点`;
+  } else if (viewYear < currentYear) {
+    document.getElementById('actual-date-label').textContent = `${viewYear}年 年間合計`;
+  } else {
+    document.getElementById('actual-date-label').textContent = `${viewYear}年 未来の予定（入金なし）`;
+  }
 
   calcNisaQuota();
 }
@@ -623,7 +741,7 @@ document.getElementById('base-price-input').value = basePrice;
 document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
 document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
 
-renderActualInvested();
+renderYearView();
 renderDipLevels();
 renderDipHistory();
 renderRules();
