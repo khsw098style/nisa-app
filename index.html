@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-title" content="NISA運用">
 <title>NISA運用シミュレーター</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -387,16 +386,30 @@ canvas { width: 100% !important; }
     <div class="dip-text">基準価格から一定割合下落した際に、成長投資枠から各30万円を追加投資します。積立は継続します。</div>
   </div>
 
+  <!-- 高値基準価格 -->
   <div class="card">
-    <div class="card-title">💹 現在の基準価格</div>
+    <div class="card-title">🏔 高値基準価格<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">下落ライン計算のベース</span></div>
     <div class="price-input-wrap">
-      <input class="price-input" type="number" id="base-price-input" value="35500">
-      <button class="price-update-btn" onclick="updatePrice()">更新</button>
+      <input class="price-input" type="number" id="high-price-input" value="35500">
+      <button class="price-update-btn" onclick="updateHighPrice()">更新</button>
     </div>
-    <div style="font-size:11px;color:var(--mid);margin-top:8px">※ 毎日手動で更新してください</div>
+    <div style="font-size:11px;color:var(--mid);margin-top:8px">※ 高値を更新した時のみ変更してください</div>
   </div>
 
-  <div class="section-title">📉 下落ラインと追加投資額</div>
+  <!-- 現在の基準価格 -->
+  <div class="card">
+    <div class="card-title">💹 現在の基準価格<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">毎日更新</span></div>
+    <div class="price-input-wrap">
+      <input class="price-input" type="number" id="base-price-input" value="35500">
+      <button class="price-update-btn" onclick="updateCurrentPrice()">更新</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+      <div style="font-size:11px;color:var(--mid)">高値からの下落率</div>
+      <div id="current-dip-rate" style="font-size:18px;font-weight:700;color:var(--green)">0.00%</div>
+    </div>
+  </div>
+
+  <div class="section-title">📉 下落ラインと追加投資額<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">高値基準価格ベース</span></div>
   <div class="card" id="dip-levels-card"></div>
 
   <!-- 追加入金履歴 -->
@@ -424,13 +437,29 @@ canvas { width: 100% !important; }
   </div>
 
   <div class="card">
-    <div class="card-title">📈 追加投資ありvsなし（5%・20年）</div>
+    <div class="card-title">📈 追加投資ありvsなし</div>
+    <div class="rate-tabs" style="margin-bottom:10px">
+      <button class="rate-tab" data-rate="3" onclick="setDipRate(3,this)">年利3%</button>
+      <button class="rate-tab active" data-rate="5" onclick="setDipRate(5,this)">年利5%</button>
+      <button class="rate-tab" data-rate="7" onclick="setDipRate(7,this)">年利7%</button>
+      <button class="rate-tab" data-rate="10" onclick="setDipRate(10,this)">年利10%</button>
+    </div>
+    <div class="slider-group" style="margin-bottom:12px">
+      <div class="slider-label">
+        <span>年数</span>
+        <span class="slider-val" id="dip-year-val">20年後</span>
+      </div>
+      <input type="range" min="5" max="20" value="20" id="dip-year-slider" oninput="updateDipChart()">
+    </div>
     <div class="chart-wrap">
       <canvas id="dip-chart" height="220"></canvas>
     </div>
-    <div style="margin-top:10px;display:flex;gap:16px;font-size:12px;">
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#2d9e6f;display:inline-block;border-radius:2px"></span>追加投資あり</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#a8bdb5;display:inline-block;border-radius:2px"></span>積立のみ</span>
+    <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;gap:16px;font-size:12px;">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#2d9e6f;display:inline-block;border-radius:2px"></span>追加投資あり</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#a8bdb5;display:inline-block;border-radius:2px"></span>積立のみ</span>
+      </div>
+      <div style="font-size:12px;color:var(--mid)">差額：<span id="dip-diff" style="font-weight:700;color:var(--green)">―</span></div>
     </div>
   </div>
 </div>
@@ -734,9 +763,13 @@ function renderDipHistory() {
 }
 
 // ── 初期化 ──
+// ── 価格管理 ──
+// highPrice：高値基準価格（下落ライン計算用）
+// basePrice：現在の基準価格（毎日更新・ヘッダー表示用）
+let highPrice = parseInt(localStorage.getItem('nisa-high-price') || '35500');
 let basePrice = parseInt(localStorage.getItem('nisa-base-price') || '35500');
-let currentRate = 5;
 
+document.getElementById('high-price-input').value = highPrice;
 document.getElementById('base-price-input').value = basePrice;
 document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
 document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
@@ -838,6 +871,45 @@ function drawMainChart(highlightYear) {
   ctx.fillText(fmt(data[hy]),hx,hyy-10);
 }
 
+// ── 追加投資グラフ用の状態 ──
+let dipRate = 5;
+let dipYears = 20;
+
+function setDipRate(r, el) {
+  dipRate = r;
+  document.querySelectorAll('#page-dip .rate-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  updateDipChart();
+}
+
+function updateDipChart() {
+  dipYears = parseInt(document.getElementById('dip-year-slider').value);
+  document.getElementById('dip-year-val').textContent = dipYears + '年後';
+  drawDipChart();
+}
+
+// 年利・年数を指定して複利計算（追加投資あり・なし）
+function calcDipSeries(rate, years) {
+  const r = rate / 100;
+  const noDip = [];
+  const withDip = [];
+  let balNo = 0, balWith = 0;
+
+  for (let i = 1; i <= years; i++) {
+    // 積立額：1年目は3・4月3万+5〜12月5万+成長枠36万、2年目以降は5万×12
+    const deposit = i === 1 ? 30000*2 + 50000*8 + GROWTH_INITIAL : 50000*12;
+    // 追加投資：1年目に実際の追加入金を反映
+    const extra = i === 1 ? getAdditionalTotal() : 0;
+
+    balNo = (balNo + deposit) * (1 + r);
+    balWith = (balWith + deposit + extra) * (1 + r);
+
+    noDip.push(Math.round(balNo));
+    withDip.push(Math.round(balWith));
+  }
+  return { noDip, withDip };
+}
+
 function drawDipChart() {
   const canvas = document.getElementById('dip-chart');
   if (!canvas) return;
@@ -845,44 +917,115 @@ function drawDipChart() {
   const W=canvas.offsetWidth; const H=220;
   canvas.width=W*dpr; canvas.height=H*dpr;
   const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
-  const d1=DIP.withDip, d2=DIP.noDip, max=Math.max(...d1);
-  const pad={top:20,right:16,bottom:30,left:56};
-  const w=W-pad.left-pad.right, h=H-pad.top-pad.bottom;
+
+  const { noDip, withDip } = calcDipSeries(dipRate, dipYears);
+  const d1 = withDip, d2 = noDip;
+  const max = Math.max(...d1, ...d2);
+  const pad = {top:24,right:16,bottom:30,left:56};
+  const w = W-pad.left-pad.right, h = H-pad.top-pad.bottom;
+
   ctx.clearRect(0,0,W,H);
+
+  // グリッド
   for (let i=0;i<=4;i++) {
     const y=pad.top+(h/4)*i;
     ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+w,y);
     ctx.strokeStyle='#dde8e3'; ctx.lineWidth=0.5; ctx.stroke();
     ctx.fillStyle='#5a7268'; ctx.font='10px Noto Sans JP'; ctx.textAlign='right';
-    ctx.fillText(Math.round(max*(4-i)/4/10000)+'万',pad.left-4,y+4);
+    ctx.fillText(Math.round(max*(4-i)/4/10000)+'万', pad.left-4, y+4);
   }
-  [5,10,15,20].forEach(y => { ctx.fillStyle='#5a7268'; ctx.textAlign='center'; ctx.font='10px Noto Sans JP'; ctx.fillText(y+'年',pad.left+(y-1)/(d1.length-1)*w,H-6); });
-  [[d2,'#a8bdb5',1.5],[d1,'#2d9e6f',2.5]].forEach(([data,color,lw]) => {
-    ctx.beginPath();
-    data.forEach((v,i) => { const x=pad.left+i/(data.length-1)*w, y=pad.top+(1-v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-    ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.stroke();
+
+  // X軸ラベル（5年刻み）
+  const step = dipYears <= 10 ? 2 : 5;
+  for (let y=step; y<=dipYears; y+=step) {
+    const x = pad.left + (y-1)/(d1.length-1)*w;
+    ctx.fillStyle='#5a7268'; ctx.textAlign='center'; ctx.font='10px Noto Sans JP';
+    ctx.fillText(y+'年', x, H-6);
+  }
+
+  // 積立のみ（グレー）
+  ctx.beginPath();
+  d2.forEach((v,i) => {
+    const x=pad.left+i/(d2.length-1)*w, y=pad.top+(1-v/max)*h;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
   });
+  ctx.strokeStyle='#a8bdb5'; ctx.lineWidth=1.5; ctx.stroke();
+
+  // 追加投資あり（グリーン・グラデ塗り）
+  const grad = ctx.createLinearGradient(0,pad.top,0,pad.top+h);
+  grad.addColorStop(0,'rgba(45,158,111,0.25)'); grad.addColorStop(1,'rgba(45,158,111,0)');
+  ctx.beginPath();
+  d1.forEach((v,i) => { const x=pad.left+i/(d1.length-1)*w, y=pad.top+(1-v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.lineTo(pad.left+w, pad.top+h); ctx.lineTo(pad.left, pad.top+h); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+
+  ctx.beginPath();
+  d1.forEach((v,i) => { const x=pad.left+i/(d1.length-1)*w, y=pad.top+(1-v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.strokeStyle='#2d9e6f'; ctx.lineWidth=2.5; ctx.stroke();
+
+  // 終点の値ラベル
+  const lastX = pad.left+w;
+  const lastY1 = pad.top+(1-d1[d1.length-1]/max)*h;
+  const lastY2 = pad.top+(1-d2[d2.length-1]/max)*h;
+  ctx.beginPath(); ctx.arc(lastX, lastY1, 4, 0, Math.PI*2); ctx.fillStyle='#1a6b4a'; ctx.fill();
+  ctx.fillStyle='#1a6b4a'; ctx.font='bold 10px Noto Sans JP'; ctx.textAlign='right';
+  ctx.fillText(fmt(d1[d1.length-1]), lastX-8, lastY1-6);
+
+  ctx.beginPath(); ctx.arc(lastX, lastY2, 4, 0, Math.PI*2); ctx.fillStyle='#a8bdb5'; ctx.fill();
+  ctx.fillStyle='#a8bdb5'; ctx.textAlign='right';
+  ctx.fillText(fmt(d2[d2.length-1]), lastX-8, lastY2+14);
+
+  // 差額表示
+  const diff = d1[d1.length-1] - d2[d2.length-1];
+  const diffEl = document.getElementById('dip-diff');
+  if (diffEl) diffEl.textContent = '+' + fmt(diff);
 }
 
 // ── 価格更新 ──
-function updatePrice() {
+function updateHighPrice() {
+  const v = parseInt(document.getElementById('high-price-input').value);
+  if (!v || v < 1000) { showToast('正しい価格を入力してください'); return; }
+  highPrice = v;
+  localStorage.setItem('nisa-high-price', v);
+  renderDipLevels();
+  showToast('🏔 高値基準価格を更新しました：' + v.toLocaleString() + '円');
+}
+
+function updateCurrentPrice() {
   const v = parseInt(document.getElementById('base-price-input').value);
-  if (!v||v<1000) { showToast('正しい価格を入力してください'); return; }
+  if (!v || v < 1000) { showToast('正しい価格を入力してください'); return; }
   basePrice = v;
   localStorage.setItem('nisa-base-price', v);
-  document.getElementById('header-price').textContent = v.toLocaleString()+'円';
+  document.getElementById('header-price').textContent = v.toLocaleString() + '円';
   renderDipLevels();
-  showToast('✅ 基準価格を更新しました');
+  showToast('💹 現在の基準価格を更新しました：' + v.toLocaleString() + '円');
 }
 
 function renderDipLevels() {
+  // 下落率を高値基準価格ベースで計算
+  const dipRate = highPrice > 0 ? (basePrice - highPrice) / highPrice * 100 : 0;
+  const dipRateEl = document.getElementById('current-dip-rate');
+  if (dipRateEl) {
+    const sign = dipRate >= 0 ? '+' : '';
+    dipRateEl.textContent = sign + dipRate.toFixed(2) + '%';
+    dipRateEl.style.color = dipRate >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+
   document.getElementById('dip-levels-card').innerHTML = DIP_LEVELS.map(d => {
-    const price = Math.round(basePrice*(1-d.pct));
+    const linePrice = Math.round(highPrice * (1-d.pct));
+    const isReached = basePrice <= linePrice;
+    const isIrr = d.pct >= 0.4;
     return `<div class="dip-row">
-      <div><div class="dip-row-label">${d.label}</div><div class="dip-row-add">${d.add}</div></div>
+      <div>
+        <div class="dip-row-label">${d.label}</div>
+        <div class="dip-row-add">${d.add}</div>
+      </div>
       <div style="text-align:right">
-        <div class="dip-row-price" style="${d.pct>=0.4?'color:var(--mid)':''}">≈ ${price.toLocaleString()}円</div>
-        <div style="font-size:10px;color:var(--light)">▼${Math.round(d.pct*100)}%</div>
+        <div class="dip-row-price" style="${isIrr ? 'color:var(--mid)' : isReached ? 'color:var(--red)' : ''}">
+          ≈ ${linePrice.toLocaleString()}円
+          ${isReached && !isIrr ? '<span style="font-size:10px;background:var(--red-light);color:var(--red);padding:1px 6px;border-radius:99px;margin-left:4px">到達！</span>' : ''}
+        </div>
+        <div style="font-size:10px;color:var(--light)">▼${Math.round(d.pct*100)}%（高値基準）</div>
       </div>
     </div>`;
   }).join('');
@@ -919,7 +1062,7 @@ window.addEventListener('resize', () => {
   if (document.getElementById('page-dip').classList.contains('active')) drawDipChart();
 });
 
-// 基準価額の自動取得
+// 基準価額の自動取得（現在価格のみ更新）
 async function fetchLatestPrice() {
   try {
     const res = await fetch('/.netlify/functions/get-price');
@@ -928,9 +1071,9 @@ async function fetchLatestPrice() {
       basePrice = parseInt(data.price);
       localStorage.setItem('nisa-base-price', basePrice);
       document.getElementById('base-price-input').value = basePrice;
-      document.getElementById('header-price').textContent = basePrice.toLocaleString()+'円';
-      renderDipLevels();
-      showToast('📈 基準価額を更新しました：'+basePrice.toLocaleString()+'円');
+      document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
+      renderDipLevels(); // 下落率の再計算
+      showToast('📈 現在価格を更新しました：' + basePrice.toLocaleString() + '円');
     }
   } catch(e) { console.log('価格取得失敗'); }
 }
