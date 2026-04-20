@@ -781,7 +781,24 @@ renderRules();
 renderCompareTable();
 renderFullTable();
 updateSim();
-setTimeout(() => { drawMainChart(); }, 100);
+
+// canvasを確実に描画するユーティリティ
+function renderCanvas(canvasId, drawFn) {
+  const tryDraw = (attempts) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width || canvas.closest('.card')?.getBoundingClientRect().width - 32 || 320;
+    if (W < 10 && attempts > 0) {
+      setTimeout(() => tryDraw(attempts - 1), 100);
+      return;
+    }
+    drawFn(canvas, W);
+  };
+  tryDraw(5);
+}
+
+setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 200);
 
 // ── ページ ──
 function gotoPage(id, btn) {
@@ -789,13 +806,11 @@ function gotoPage(id, btn) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'home') setTimeout(() => drawMainChart(), 50);
+  if (id === 'home') setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 100);
   if (id === 'dip') {
-    setTimeout(() => {
-      dipYears = parseInt(document.getElementById('dip-year-slider').value);
-      document.getElementById('dip-year-val').textContent = dipYears + '年後';
-      drawDipChart();
-    }, 150);
+    dipYears = parseInt(document.getElementById('dip-year-slider').value);
+    document.getElementById('dip-year-val').textContent = dipYears + '年後';
+    setTimeout(() => renderCanvas('dip-chart', (c,W) => drawDipChart(c, W)), 100);
   }
 }
 
@@ -826,24 +841,25 @@ function updateSim() {
   const gain = bal - invested;
   document.getElementById('sim-invested').textContent = fmt(invested);
   document.getElementById('sim-gain').textContent = (gain >= 0 ? '+' : '') + fmt(gain);
-  drawMainChart(y);
+  renderCanvas('main-chart', (c,W) => drawMainChart(y, c, W));
 }
 
 function setRateTab(r, el) {
   currentRate = r;
   document.querySelectorAll('.rate-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  drawMainChart();
+  renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W));
 }
 
 function fmt(n) { return Math.round(n/10000).toLocaleString() + '万円'; }
 
 // ── グラフ ──
-function drawMainChart(highlightYear) {
-  const canvas = document.getElementById('main-chart');
+function drawMainChart(highlightYear, canvasEl, fixedW) {
+  const canvas = canvasEl || document.getElementById('main-chart');
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
-  const W = canvas.offsetWidth; const H = 200;
+  const W = fixedW || canvas.offsetWidth || 320;
+  const H = 200;
   canvas.width = W*dpr; canvas.height = H*dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
@@ -891,7 +907,7 @@ function setDipRate(r, el) {
 function updateDipChart() {
   dipYears = parseInt(document.getElementById('dip-year-slider').value);
   document.getElementById('dip-year-val').textContent = dipYears + '年後';
-  drawDipChart();
+  renderCanvas('dip-chart', (c,W) => drawDipChart(c, W));
 }
 
 // 年利・年数を指定して複利計算（追加投資あり・なし）
@@ -916,14 +932,12 @@ function calcDipSeries(rate, years) {
   return { noDip, withDip };
 }
 
-function drawDipChart() {
-  const canvas = document.getElementById('dip-chart');
+function drawDipChart(canvasEl, fixedW) {
+  const canvas = canvasEl || document.getElementById('dip-chart');
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
-  const parent = canvas.closest('.card') || canvas.parentElement;
-  const W = parent ? parent.clientWidth - 32 : 300;
+  const W = fixedW || canvas.offsetWidth || 320;
   const H = 220;
-  canvas.style.width = W + 'px';
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
@@ -1069,8 +1083,10 @@ function showToast(msg) {
 }
 
 window.addEventListener('resize', () => {
-  if (document.getElementById('page-home').classList.contains('active')) drawMainChart();
-  if (document.getElementById('page-dip').classList.contains('active')) drawDipChart();
+  if (document.getElementById('page-home').classList.contains('active'))
+    renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W));
+  if (document.getElementById('page-dip').classList.contains('active'))
+    renderCanvas('dip-chart', (c,W) => drawDipChart(c, W));
 });
 
 // 基準価額の自動取得（現在価格のみ更新）
