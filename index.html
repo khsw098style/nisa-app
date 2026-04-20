@@ -439,10 +439,10 @@ canvas { width: 100% !important; }
   <div class="card">
     <div class="card-title">📈 追加投資ありvsなし</div>
     <div class="rate-tabs" style="margin-bottom:10px">
-      <button class="rate-tab" data-rate="3" onclick="setDipRate(3,this)">年利3%</button>
-      <button class="rate-tab active" data-rate="5" onclick="setDipRate(5,this)">年利5%</button>
-      <button class="rate-tab" data-rate="7" onclick="setDipRate(7,this)">年利7%</button>
-      <button class="rate-tab" data-rate="10" onclick="setDipRate(10,this)">年利10%</button>
+      <button class="rate-tab dip-rate-tab" data-rate="3" onclick="setDipRate(3,this)">年利3%</button>
+      <button class="rate-tab dip-rate-tab active" data-rate="5" onclick="setDipRate(5,this)">年利5%</button>
+      <button class="rate-tab dip-rate-tab" data-rate="7" onclick="setDipRate(7,this)">年利7%</button>
+      <button class="rate-tab dip-rate-tab" data-rate="10" onclick="setDipRate(10,this)">年利10%</button>
     </div>
     <div class="slider-group" style="margin-bottom:12px">
       <div class="slider-label">
@@ -790,7 +790,7 @@ function gotoPage(id, btn) {
   document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
   if (id === 'home') setTimeout(() => drawMainChart(), 50);
-  if (id === 'dip') setTimeout(() => drawDipChart(), 50);
+  if (id === 'dip') setTimeout(() => { updateDipChart(); }, 100);
 }
 
 // ── シミュレーション ──
@@ -877,7 +877,7 @@ let dipYears = 20;
 
 function setDipRate(r, el) {
   dipRate = r;
-  document.querySelectorAll('#page-dip .rate-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.dip-rate-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   updateDipChart();
 }
@@ -914,9 +914,12 @@ function drawDipChart() {
   const canvas = document.getElementById('dip-chart');
   if (!canvas) return;
   const dpr = window.devicePixelRatio||1;
-  const W=canvas.offsetWidth; const H=220;
-  canvas.width=W*dpr; canvas.height=H*dpr;
-  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  // offsetWidthが0の場合は親要素から取得
+  const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 300;
+  const H = 220;
+  canvas.style.width = '100%';
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
 
   const { noDip, withDip } = calcDipSeries(dipRate, dipYears);
   const d1 = withDip, d2 = noDip;
