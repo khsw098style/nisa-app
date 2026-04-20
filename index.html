@@ -783,22 +783,17 @@ renderFullTable();
 updateSim();
 
 // canvasを確実に描画するユーティリティ
+// 非表示ページでも動くよう、pageの幅から直接計算
 function renderCanvas(canvasId, drawFn) {
-  const tryDraw = (attempts) => {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const W = rect.width || canvas.closest('.card')?.getBoundingClientRect().width - 32 || 320;
-    if (W < 10 && attempts > 0) {
-      setTimeout(() => tryDraw(attempts - 1), 100);
-      return;
-    }
-    drawFn(canvas, W);
-  };
-  tryDraw(5);
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  // max-width:430px, padding:16px×2 = 398px が最大幅
+  const pageW = Math.min(window.innerWidth, 430);
+  const W = pageW - 32; // padding 16px × 2
+  drawFn(canvas, W);
 }
 
-setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 200);
+setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 50);
 
 // ── ページ ──
 function gotoPage(id, btn) {
