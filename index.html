@@ -781,7 +781,7 @@ renderRules();
 renderCompareTable();
 renderFullTable();
 updateSim();
-setTimeout(() => { drawMainChart(); drawDipChart(); }, 100);
+setTimeout(() => { drawMainChart(); }, 100);
 
 // ── ページ ──
 function gotoPage(id, btn) {
@@ -790,7 +790,13 @@ function gotoPage(id, btn) {
   document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
   if (id === 'home') setTimeout(() => drawMainChart(), 50);
-  if (id === 'dip') setTimeout(() => { updateDipChart(); }, 100);
+  if (id === 'dip') {
+    setTimeout(() => {
+      dipYears = parseInt(document.getElementById('dip-year-slider').value);
+      document.getElementById('dip-year-val').textContent = dipYears + '年後';
+      drawDipChart();
+    }, 150);
+  }
 }
 
 // ── シミュレーション ──
@@ -913,13 +919,15 @@ function calcDipSeries(rate, years) {
 function drawDipChart() {
   const canvas = document.getElementById('dip-chart');
   if (!canvas) return;
-  const dpr = window.devicePixelRatio||1;
-  // offsetWidthが0の場合は親要素から取得
-  const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 300;
+  const dpr = window.devicePixelRatio || 1;
+  const parent = canvas.closest('.card') || canvas.parentElement;
+  const W = parent ? parent.clientWidth - 32 : 300;
   const H = 220;
-  canvas.style.width = '100%';
-  canvas.width = W*dpr; canvas.height = H*dpr;
-  const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  canvas.style.width = W + 'px';
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
 
   const { noDip, withDip } = calcDipSeries(dipRate, dipYears);
   const d1 = withDip, d2 = noDip;
