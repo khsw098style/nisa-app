@@ -759,32 +759,62 @@ canvas { width: 100% !important; }
 <div class="toast" id="toast"></div>
 
 <script>
-// ── データ ──
-const SUMMARY = {
-  3:  [527609,1153143,1797444,2461073,3144611,3848655,4573821,5320742,6090070,6882478,7698658,8539324,9405210,10297072,11215690,12161867,13136429,14140228,15174140,16239071],
-  5:  [532638,1175399,1850298,2558942,3303018,4084297,4904641,5766002,6670431,7620082,8617215,9664204,10763543,11917850,13129871,14402493,15738747,17141813,18615033,20161913],
-  7:  [537634,1197783,1904142,2659947,3468659,4333980,5259873,6250579,7310634,8444894,9658551,10957165,12346681,13833464,15424321,17126538,18947911,20896780,22982069,25213329],
-  10: [545065,1231598,1986785,2817491,3731267,4736420,5842089,7058325,8396184,9867829,11486639,13267330,15226090,17380726,19750825,22357935,25225755,28380357,31850420,35667489]
-};
-const DIP = {
-  noDip:   [532638,1175399,1850298,2558942,3303018,4084297,4904641,5766002,6670431,7620082,8617215,9664204,10763543,11917850,13129871,14402493,15738747,17141813,18615033,20161913],
-  withDip: [532638,1476621,2166581,2891039,3651720,4450435,5289086,6169669,7094281,8065124,9084509,10154864,11278736,12458801,13697870,14998893,16364966,17799344,19305440,20886840]
-};
-const RULES = [
-  { icon:'💴', label:'基準価格', val:'35,500円（2026/4/18時点）' },
-  { icon:'📦', label:'投資商品', val:'eMAXIS Slim 全世界株式（オール・カントリー）' },
-  { icon:'📅', label:'積立（〜4月）', val:'30,000円/月（27日）' },
-  { icon:'📅', label:'積立（5月〜）', val:'50,000円/月（27日）' },
-  { icon:'💰', label:'成長枠（初期）', val:'360,000円（2026年3月一括）' },
-  { icon:'📌', label:'運用ルール', val:'積立継続 ＋ 下落時のみ追加投資' },
-  { icon:'💰', label:'追加投資額', val:'-10%:10万円 / -20%:20万円 / -30%:50万円（成長投資枠）' },
-  { icon:'⚠️', label:'-40%以上', val:'要検討（イレギュラー対応）' },
-];
-const DIP_LEVELS = [
-  { label:'-10%ライン', pct:0.10, add:'10万円追加', flagKey:'flag_10', amount:100000 },
-  { label:'-20%ライン', pct:0.20, add:'20万円追加', flagKey:'flag_20', amount:200000 },
-  { label:'-30%ライン', pct:0.30, add:'50万円追加', flagKey:'flag_30', amount:500000 },
-  { label:'-40%以上',  pct:0.40, add:'要検討',     flagKey:null,       amount:0 },
+// ════════════════════════════════════════
+// ── アプリ定数（マジックナンバー禁止・ここで一元管理）──
+// ════════════════════════════════════════
+
+/** NISA投資枠（円） */
+const NISA = Object.freeze({
+  LIFETIME_LIMIT:   18_000_000,  // 生涯投資枠
+  TSUMITATE_LIMIT:   1_200_000,  // つみたて投資枠（年間）
+  GROWTH_LIMIT:      2_400_000,  // 成長投資枠（年間）
+});
+
+/** シミュレーション設定 */
+const SIM = Object.freeze({
+  RATES:     [3, 5, 7, 10],  // 年利選択肢（%）
+  MAX_YEARS: 20,              // 最大運用年数
+});
+
+/** 下落戦略 */
+const DIP_CONFIG = Object.freeze({
+  HIGH_PRICE_BUFFER: 1.02,   // 新高値判定バッファ（2%）
+  LEVELS: [
+    { label: '-10%ライン', pct: 0.10, add: '10万円追加', flagKey: 'flag_10', amount: 100_000 },
+    { label: '-20%ライン', pct: 0.20, add: '20万円追加', flagKey: 'flag_20', amount: 200_000 },
+    { label: '-30%ライン', pct: 0.30, add: '50万円追加', flagKey: 'flag_30', amount: 500_000 },
+    { label: '-40%以上',  pct: 0.40, add: '要検討',     flagKey: null,       amount: 0 },
+  ],
+});
+
+/** GAS APIエンドポイント */
+const API = Object.freeze({
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbxpqamvYslmIhrsoPODq6kW-wfBf74A1nSfO3r9ESL_Gu0Ja7S8dFDL-vFl_2w_JlrX/exec',
+});
+
+/** LocalStorageキー */
+const STORAGE_KEYS = Object.freeze({
+  USER_CONFIG:        'nisa-user-config',
+  TSUMITATE_HISTORY:  'nisa-tsumitate-history',
+  DIP_HISTORY:        'nisa-dip-history',
+  BASE_PRICE:         'nisa-base-price',
+  HIGH_PRICE:         'nisa-high-price',
+  CYCLE_STATUS:       'nisa-cycle-status',
+  NOTIF_PREFIX:       'nisa-last-notif-',
+});
+
+// ════════════════════════════════════════
+// ── 後方互換エイリアス（段階的に廃止予定）──
+// ════════════════════════════════════════
+const LIFETIME_LIMIT  = NISA.LIFETIME_LIMIT;
+const TSUMITATE_LIMIT = NISA.TSUMITATE_LIMIT;
+const GROWTH_LIMIT    = NISA.GROWTH_LIMIT;
+const DIP_LEVELS      = DIP_CONFIG.LEVELS;
+const DIP_ALERT_LEVELS = [
+  { pct: 0.40, label: '-40%以上',   emoji: '🆘', cls: 'level-40' },
+  { pct: 0.30, label: '-30%ライン', emoji: '🚨', cls: 'level-30' },
+  { pct: 0.20, label: '-20%ライン', emoji: '⚠️', cls: 'level-20' },
+  { pct: 0.10, label: '-10%ライン', emoji: '📉', cls: 'level-10' },
 ];
 
 // ── 年切り替え ──
@@ -870,14 +900,14 @@ function calcLifetimeUsed(upToYear) {
 
 // ── ユーザー設定管理 ──
 function loadUserConfig() {
-  try { return JSON.parse(localStorage.getItem('nisa-user-config') || 'null'); } catch(e) { return null; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_CONFIG) || 'null'); } catch(e) { return null; }
 }
-function saveUserConfig(cfg) { localStorage.setItem('nisa-user-config', JSON.stringify(cfg)); }
+function saveUserConfig(cfg) { localStorage.setItem(STORAGE_KEYS.USER_CONFIG, JSON.stringify(cfg)); }
 
 function loadTsumitatHistory() {
-  try { return JSON.parse(localStorage.getItem('nisa-tsumitate-history') || 'null'); } catch(e) { return null; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.TSUMITATE_HISTORY) || 'null'); } catch(e) { return null; }
 }
-function saveTsumitatHistory(h) { localStorage.setItem('nisa-tsumitate-history', JSON.stringify(h)); }
+function saveTsumitatHistory(h) { localStorage.setItem(STORAGE_KEYS.TSUMITATE_HISTORY, JSON.stringify(h)); }
 
 // ── オンボーディング ──
 function initOnboardingSelects() {
@@ -1010,10 +1040,6 @@ function getAdditionalTotal() {
 }
 
 // ── NISA枠計算 ──
-const LIFETIME_LIMIT = 18000000;      // 生涯投資枠
-const TSUMITATE_LIMIT = 1200000;      // つみたて投資枠（年間）
-const GROWTH_LIMIT = 2400000;         // 成長投資枠（年間）
-
 function calcNisaQuota() {
   const currentYear = new Date().getFullYear();
 
@@ -1099,9 +1125,9 @@ function renderActualInvested() {
 
 // ── 入金履歴 ──
 function loadHistory() {
-  try { return JSON.parse(localStorage.getItem('nisa-dip-history') || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.DIP_HISTORY) || '[]'); } catch(e) { return []; }
 }
-function saveHistory(h) { localStorage.setItem('nisa-dip-history', JSON.stringify(h)); }
+function saveHistory(h) { localStorage.setItem(STORAGE_KEYS.DIP_HISTORY, JSON.stringify(h)); }
 
 function autoFillAmount() {
   const sel = document.getElementById('inp-dip-level');
@@ -1202,8 +1228,8 @@ function renderDipHistory() {
 }
 
 // ── 初期化 ──
-let highPrice = parseInt(localStorage.getItem('nisa-high-price') || '35500');
-let basePrice = parseInt(localStorage.getItem('nisa-base-price') || '35500');
+let highPrice = parseInt(localStorage.getItem(STORAGE_KEYS.HIGH_PRICE) || '35500');
+let basePrice = parseInt(localStorage.getItem(STORAGE_KEYS.BASE_PRICE) || '35500');
 let currentRate = 3;
 let dipRate = 5;
 let dipYears = 20;
@@ -1211,8 +1237,8 @@ let dipYears = 20;
 function initApp() {
   const cfg = getConfig();
   // highPriceはLocalStorageに保存済みの値を優先、なければ初期設定値を使う
-  highPrice = parseInt(localStorage.getItem('nisa-high-price') || cfg.highPrice);
-  basePrice = parseInt(localStorage.getItem('nisa-base-price') || cfg.highPrice);
+  highPrice = parseInt(localStorage.getItem(STORAGE_KEYS.HIGH_PRICE) || cfg.highPrice);
+  basePrice = parseInt(localStorage.getItem(STORAGE_KEYS.BASE_PRICE) || cfg.highPrice);
 
   document.getElementById('high-price-input').value = highPrice;
   document.getElementById('base-price-input').value = basePrice;
@@ -1274,17 +1300,14 @@ function updateSim() {
   const y = parseInt(document.getElementById('year-slider').value);
   document.getElementById('year-val').textContent = y + '年後';
 
-  const cfg = getConfig();
   const additional = getAdditionalTotal();
 
-  // 積立総額予測：ユーザー設定ベースで計算
-  let tsumitateProjected = 0;
+  // 積立総額予測：共通エンジンを使用（DRY原則）
+  let invested = 0;
   for (let i = 1; i <= y; i++) {
-    const targetYear = cfg.startYear + i - 1;
-    const months = i === 1 ? 12 - cfg.startMonth + 1 : 12;
-    tsumitateProjected += getTsumitatAmountAt(targetYear, i === 1 ? cfg.startMonth : 1) * months;
+    invested += calcYearlyDeposit(i);
   }
-  const invested = tsumitateProjected + cfg.growthAmount + additional;
+  invested += additional;
 
   // 運用益：選択中の年利で複利計算
   const { noDip } = calcDipSeries(currentRate, y);
@@ -1365,6 +1388,20 @@ function updateDipChart() {
   renderCanvas('dip-chart', (c,W) => drawDipChart(c, W));
 }
 
+/**
+ * 指定年のシミュレーション用年間入金額を計算する共通エンジン
+ * @param {number} simYear - シミュレーション上の経過年数（1始まり）
+ * @returns {number} 年間入金額（円）
+ */
+function calcYearlyDeposit(simYear) {
+  const cfg = getConfig();
+  const targetYear = cfg.startYear + simYear - 1;
+  const months = simYear === 1 ? 12 - cfg.startMonth + 1 : 12;
+  const monthlyAmount = getTsumitatAmountAt(targetYear, simYear === 1 ? cfg.startMonth : 1);
+  const growthInitial = simYear === 1 ? cfg.growthAmount : 0;
+  return monthlyAmount * months + growthInitial;
+}
+
 // 年利・年数を指定して複利計算（追加投資あり・なし）
 function calcDipSeries(rate, years) {
   const r = rate / 100;
@@ -1373,12 +1410,10 @@ function calcDipSeries(rate, years) {
   let balNo = 0, balWith = 0;
 
   for (let i = 1; i <= years; i++) {
-    // 積立額：1年目は3・4月3万+5〜12月5万+成長枠36万、2年目以降は5万×12
-    const deposit = i === 1 ? 30000*2 + 50000*8 + GROWTH_INITIAL : 50000*12;
-    // 追加投資：1年目に実際の追加入金を反映
+    const deposit = calcYearlyDeposit(i);
     const extra = i === 1 ? getAdditionalTotal() : 0;
 
-    balNo = (balNo + deposit) * (1 + r);
+    balNo  = (balNo  + deposit)         * (1 + r);
     balWith = (balWith + deposit + extra) * (1 + r);
 
     noDip.push(Math.round(balNo));
@@ -1466,7 +1501,7 @@ function updateHighPrice() {
   const v = parseInt(document.getElementById('high-price-input').value);
   if (!v || v < 1000) { showToast('正しい価格を入力してください'); return; }
   highPrice = v;
-  localStorage.setItem('nisa-high-price', v);
+  localStorage.setItem(STORAGE_KEYS.HIGH_PRICE, v);
   renderDipLevels();
   checkDipAlert();
   showToast('🏔 高値基準価格を更新しました：' + v.toLocaleString() + '円');
@@ -1476,7 +1511,7 @@ function updateCurrentPrice() {
   const v = parseInt(document.getElementById('base-price-input').value);
   if (!v || v < 1000) { showToast('正しい価格を入力してください'); return; }
   basePrice = v;
-  localStorage.setItem('nisa-base-price', v);
+  localStorage.setItem(STORAGE_KEYS.BASE_PRICE, v);
   document.getElementById('header-price').textContent = v.toLocaleString() + '円';
   renderDipLevels();
   checkDipAlert();
@@ -1484,13 +1519,6 @@ function updateCurrentPrice() {
 }
 
 // ── 下落チェック・通知 ──
-const DIP_ALERT_LEVELS = [
-  { pct: 0.40, label: '-40%以上',   emoji: '🆘', cls: 'level-40', flagKey: null },
-  { pct: 0.30, label: '-30%ライン', emoji: '🚨', cls: 'level-30', flagKey: 'flag_30' },
-  { pct: 0.20, label: '-20%ライン', emoji: '⚠️', cls: 'level-20', flagKey: 'flag_20' },
-  { pct: 0.10, label: '-10%ライン', emoji: '📉', cls: 'level-10', flagKey: 'flag_10' },
-];
-
 function checkDipAlert() {
   const banner = document.getElementById('dip-alert-banner');
   const titleEl = document.getElementById('dip-alert-title');
@@ -1538,7 +1566,7 @@ function checkDipAlert() {
 
 function sendDipNotification(level, rate) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const lastKey = `nisa-last-notif-${level.cls}`;
+  const lastKey = `${STORAGE_KEYS.NOTIF_PREFIX}${level.cls}`;
   const lastDate = localStorage.getItem(lastKey);
   const today = new Date().toISOString().slice(0, 10);
   if (lastDate === today) return;
@@ -1572,9 +1600,9 @@ function checkNotifBanner() {
 
 // ── サイクル・フラグ管理 ──
 function loadCycle() {
-  try { return JSON.parse(localStorage.getItem('nisa-cycle') || '{"status":"idle","flags":{}}'); } catch(e) { return {status:'idle',flags:{}}; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.CYCLE_STATUS) || '{"status":"idle","flags":{}}'); } catch(e) { return {status:'idle',flags:{}}; }
 }
-function saveCycle(c) { localStorage.setItem('nisa-cycle', JSON.stringify(c)); }
+function saveCycle(c) { localStorage.setItem(STORAGE_KEYS.CYCLE_STATUS, JSON.stringify(c)); }
 
 function getCycleStatus() { return loadCycle().status; }
 function getDipFlags() { return loadCycle().flags || {}; }
@@ -1593,7 +1621,7 @@ function resetCycle() {
 
 // 新高値チェック（高値×1.02を超えたらidleにリセット）
 function checkNewHighPrice() {
-  if (basePrice > highPrice * 1.02) {
+  if (basePrice > highPrice * DIP_CONFIG.HIGH_PRICE_BUFFER) {
     const banner = document.getElementById('new-high-banner');
     if (banner) banner.classList.add('show');
     if (getCycleStatus() === 'active') resetCycle();
@@ -1605,7 +1633,7 @@ function checkNewHighPrice() {
 
 function confirmHighPriceUpdate() {
   highPrice = basePrice;
-  localStorage.setItem('nisa-high-price', highPrice);
+  localStorage.setItem(STORAGE_KEYS.HIGH_PRICE, highPrice);
   document.getElementById('high-price-input').value = highPrice;
   document.getElementById('new-high-banner').classList.remove('show');
   renderDipLevels();
@@ -1715,12 +1743,12 @@ window.addEventListener('resize', () => {
 // 基準価額の自動取得（現在価格のみ更新）
 async function fetchLatestPrice() {
   try {
-    const url = `https://script.google.com/macros/s/AKfycbxpqamvYslmIhrsoPODq6kW-wfBf74A1nSfO3r9ESL_Gu0Ja7S8dFDL-vFl_2w_JlrX/exec?highPrice=${highPrice}`;
+    const url = `${API.GAS_URL}?highPrice=${highPrice}`;
     const res = await fetch(url);
     const data = await res.json();
     if (data.price) {
       basePrice = parseInt(data.price);
-      localStorage.setItem('nisa-base-price', basePrice);
+      localStorage.setItem(STORAGE_KEYS.BASE_PRICE, basePrice);
       document.getElementById('base-price-input').value = basePrice;
       document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
       const dateLabel = document.getElementById('current-price-date');
