@@ -236,11 +236,227 @@ canvas { width: 100% !important; }
 .year-badge.past { background: var(--sand, #f2ede5); color: var(--mid); }
 .year-badge.future { background: var(--teal-light); color: var(--teal); }
 
+/* 初回登録オーバーレイ */
+.onboarding {
+  position: fixed; inset: 0; background: var(--bg);
+  z-index: 500; overflow-y: auto;
+  padding: 0 0 40px;
+}
+.onboarding-header {
+  background: var(--green); color: white;
+  padding: 40px 24px 24px;
+  padding-top: max(40px, env(safe-area-inset-top));
+  margin-bottom: 20px;
+}
+.onboarding-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.onboarding-sub { font-size: 13px; opacity: 0.8; }
+.onboarding-body { padding: 0 16px; }
+.onboarding-step {
+  background: var(--white); border-radius: var(--radius);
+  padding: 18px; box-shadow: 0 2px 8px var(--shadow); margin-bottom: 12px;
+}
+.onboarding-step-title {
+  font-size: 14px; font-weight: 700; color: var(--green);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--green); color: white;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ob-form-group { margin-bottom: 12px; }
+.ob-form-group:last-child { margin-bottom: 0; }
+.ob-label { font-size: 12px; color: var(--mid); font-weight: 700; margin-bottom: 5px; display: block; }
+.ob-input, .ob-select {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 15px; font-family: var(--font);
+  background: var(--cream, #fdfaf6); color: var(--charcoal); outline: none;
+  transition: border-color 0.15s;
+}
+.ob-input:focus, .ob-select:focus { border-color: var(--green); }
+.ob-input-row { display: flex; gap: 8px; align-items: center; }
+.ob-unit { font-size: 13px; color: var(--mid); white-space: nowrap; }
+.ob-start-btn {
+  width: 100%; background: var(--green); color: white; border: none;
+  border-radius: var(--radius); padding: 16px; font-size: 16px; font-weight: 700;
+  cursor: pointer; font-family: var(--font); margin-top: 8px;
+  transition: background 0.15s;
+}
+.ob-start-btn:active { background: var(--coral-dark, #1a5a3a); }
+
+/* 設定タブ */
+.setting-section { margin-bottom: 16px; }
+.setting-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 13px; color: var(--mid); }
+.setting-val { font-size: 14px; font-weight: 700; }
+.setting-edit-btn {
+  background: var(--green-light); color: var(--green); border: none;
+  border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font);
+}
+.tsumitate-history-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.tsumitate-history-item:last-child { border-bottom: none; }
+.th-date { font-size: 12px; color: var(--mid); }
+.th-amount { font-size: 15px; font-weight: 700; color: var(--green); }
+.th-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 99px;
+  background: var(--green-light); color: var(--green); font-weight: 700;
+}
+.change-form {
+  background: var(--green-light); border-radius: var(--radius-sm);
+  padding: 14px; margin-top: 12px;
+}
+.change-form-title { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 10px; }
+
+/* 下落警告バナー */
+.dip-alert-banner {
+  display: none;
+  margin: 8px 16px 0;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  animation: alertPulse 2s infinite;
+}
+.dip-alert-banner.show { display: block; }
+.dip-alert-banner.level-10 { background: #FFF3CD; border: 1.5px solid #F0A500; }
+.dip-alert-banner.level-20 { background: #FFE4CC; border: 1.5px solid #E07020; }
+.dip-alert-banner.level-30 { background: var(--red-light); border: 1.5px solid var(--red); }
+.dip-alert-banner.level-40 { background: #3d0000; border: 1.5px solid var(--red); }
+.alert-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.dip-alert-banner.level-10 .alert-title { color: #7A5000; }
+.dip-alert-banner.level-20 .alert-title { color: #8B3500; }
+.dip-alert-banner.level-30 .alert-title { color: var(--red); }
+.dip-alert-banner.level-40 .alert-title { color: #FF6B6B; }
+.alert-body { font-size: 12px; }
+.dip-alert-banner.level-10 .alert-body { color: #7A5000; }
+.dip-alert-banner.level-20 .alert-body { color: #8B3500; }
+.dip-alert-banner.level-30 .alert-body { color: var(--red); }
+.dip-alert-banner.level-40 .alert-body { color: #FF6B6B; }
+@keyframes alertPulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+/* 通知許可バナー */
+.notif-banner {
+  display: none;
+  margin: 8px 16px 0;
+  background: var(--teal-light);
+  border: 1px solid var(--teal);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--teal);
+  align-items: center;
+  gap: 10px;
+}
+.notif-banner.show { display: flex; }
+.notif-banner button {
+  margin-left: auto; background: var(--teal); color: white; border: none;
+  border-radius: 99px; padding: 5px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font); flex-shrink: 0;
+}
+
+/* 新高値バナー */
+.new-high-banner {
+  display: none;
+  margin: 8px 16px 0;
+  background: var(--green-light);
+  border: 1.5px solid var(--green);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--green);
+}
+.new-high-banner.show { display: flex; align-items: center; gap: 10px; }
+.new-high-banner button {
+  margin-left: auto; background: var(--green); color: white; border: none;
+  border-radius: 99px; padding: 6px 14px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font); flex-shrink: 0;
+}
+
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--charcoal); color: white; padding: 10px 20px; border-radius: 99px; font-size: 13px; opacity: 0; transition: all 0.2s; z-index: 300; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+
+<!-- 初回登録画面 -->
+<div class="onboarding" id="onboarding" style="display:none">
+  <div class="onboarding-header">
+    <div class="onboarding-title">🌿 NISA運用ダッシュボード</div>
+    <div class="onboarding-sub">まず基本情報を登録してください。あとから設定で変更できます。</div>
+  </div>
+  <div class="onboarding-body">
+
+    <div class="onboarding-step">
+      <div class="onboarding-step-title"><div class="step-num">1</div>積立の基本設定</div>
+      <div class="ob-form-group">
+        <label class="ob-label">積立開始年月</label>
+        <div class="ob-input-row">
+          <select class="ob-select" id="ob-start-year" style="flex:1"></select>
+          <span class="ob-unit">年</span>
+          <select class="ob-select" id="ob-start-month" style="flex:1"></select>
+          <span class="ob-unit">月</span>
+        </div>
+      </div>
+      <div class="ob-form-group">
+        <label class="ob-label">積立日</label>
+        <div class="ob-input-row">
+          <input class="ob-input" type="number" id="ob-tsumitate-day" value="27" min="1" max="28">
+          <span class="ob-unit">日</span>
+        </div>
+      </div>
+      <div class="ob-form-group">
+        <label class="ob-label">毎月の積立額</label>
+        <div class="ob-input-row">
+          <input class="ob-input" type="number" id="ob-tsumitate-amount" value="30000" step="1000">
+          <span class="ob-unit">円</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="onboarding-step">
+      <div class="onboarding-step-title"><div class="step-num">2</div>成長投資枠（初期一括）</div>
+      <div class="ob-form-group">
+        <label class="ob-label">入金年月</label>
+        <div class="ob-input-row">
+          <select class="ob-select" id="ob-growth-year" style="flex:1"></select>
+          <span class="ob-unit">年</span>
+          <select class="ob-select" id="ob-growth-month" style="flex:1"></select>
+          <span class="ob-unit">月</span>
+        </div>
+      </div>
+      <div class="ob-form-group">
+        <label class="ob-label">入金額（0円の場合は0を入力）</label>
+        <div class="ob-input-row">
+          <input class="ob-input" type="number" id="ob-growth-amount" value="360000" step="10000">
+          <span class="ob-unit">円</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="onboarding-step">
+      <div class="onboarding-step-title"><div class="step-num">3</div>高値基準価格</div>
+      <div class="ob-form-group">
+        <label class="ob-label">現在の高値基準価格（下落ライン計算に使用）</label>
+        <div class="ob-input-row">
+          <input class="ob-input" type="number" id="ob-high-price" value="35500">
+          <span class="ob-unit">円</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="ob-start-btn" onclick="completeOnboarding()">はじめる 🌿</button>
+  </div>
+</div>
 
 <header class="header">
   <div class="header-top">
@@ -254,6 +470,24 @@ canvas { width: 100% !important; }
     </div>
   </div>
 </header>
+
+<!-- 新高値バナー -->
+<div class="new-high-banner" id="new-high-banner">
+  <span>🏔 新高値！高値基準価格を更新しますか？</span>
+  <button onclick="confirmHighPriceUpdate()">更新する</button>
+</div>
+
+<!-- 下落警告バナー -->
+<div class="dip-alert-banner" id="dip-alert-banner">
+  <div class="alert-title" id="dip-alert-title">🚨 下落ライン到達！</div>
+  <div class="alert-body" id="dip-alert-body"></div>
+</div>
+
+<!-- 通知許可バナー -->
+<div class="notif-banner" id="notif-banner">
+  <span>🔔 下落時にプッシュ通知を受け取る</span>
+  <button onclick="requestNotifPermission()">許可する</button>
+</div>
 
 <!-- ホーム -->
 <div class="page active" id="page-home">
@@ -338,6 +572,12 @@ canvas { width: 100% !important; }
 
   <div class="card">
     <div class="card-title">🎯 運用期間シミュレーション</div>
+    <div class="rate-tabs" style="margin-bottom:14px">
+      <button class="rate-tab active" data-rate="3" onclick="setRateTab(3,this)">年利3%</button>
+      <button class="rate-tab" data-rate="5" onclick="setRateTab(5,this)">年利5%</button>
+      <button class="rate-tab" data-rate="7" onclick="setRateTab(7,this)">年利7%</button>
+      <button class="rate-tab" data-rate="10" onclick="setRateTab(10,this)">年利10%</button>
+    </div>
     <div class="slider-group">
       <div class="slider-label">
         <span>年数</span>
@@ -356,34 +596,21 @@ canvas { width: 100% !important; }
       </div>
     </div>
   </div>
-
-  <div class="card">
-    <div class="card-title">📊 年利別・残高推移</div>
-    <div class="rate-tabs">
-      <button class="rate-tab active" data-rate="3" onclick="setRateTab(3,this)">年利3%</button>
-      <button class="rate-tab" data-rate="5" onclick="setRateTab(5,this)">年利5%</button>
-      <button class="rate-tab" data-rate="7" onclick="setRateTab(7,this)">年利7%</button>
-      <button class="rate-tab" data-rate="10" onclick="setRateTab(10,this)">年利10%</button>
-    </div>
-    <div class="chart-wrap">
-      <canvas id="main-chart" height="200"></canvas>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🏆 20年後の残高比較</div>
-    <table class="compare-table">
-      <thead><tr><th>年利</th><th>10年後</th><th>20年後</th></tr></thead>
-      <tbody id="compare-tbody"></tbody>
-    </table>
-  </div>
 </div>
 
 <!-- 下落戦略 -->
 <div class="page" id="page-dip">
   <div class="dip-card">
     <div class="dip-title">📌 下落時の追加投資ルール</div>
-    <div class="dip-text">基準価格から一定割合下落した際に、成長投資枠から各30万円を追加投資します。積立は継続します。</div>
+    <div class="dip-text">基準価格から一定割合下落した際に、成長投資枠から追加投資します。積立は継続します。<br>-10%:10万 / -20%:20万 / -30%:50万</div>
+  </div>
+
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px">
+    <div>
+      <div style="font-size:12px;color:var(--mid);margin-bottom:2px">サイクル状態</div>
+      <div id="cycle-status-badge" style="font-size:14px;font-weight:700">🟢 未発動</div>
+    </div>
+    <button onclick="resetCycle();renderDipLevels();" style="background:var(--sand);color:var(--mid);border:none;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)">リセット</button>
   </div>
 
   <!-- 高値基準価格 -->
@@ -398,15 +625,16 @@ canvas { width: 100% !important; }
 
   <!-- 現在の基準価格 -->
   <div class="card">
-    <div class="card-title">💹 現在の基準価格<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">毎日更新</span></div>
+    <div class="card-title">💹 現在の基準価格<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">自動取得</span></div>
     <div class="price-input-wrap">
       <input class="price-input" type="number" id="base-price-input" value="35500">
-      <button class="price-update-btn" onclick="updateCurrentPrice()">更新</button>
+      <button class="price-update-btn" onclick="updateCurrentPrice()">手動更新</button>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-      <div style="font-size:11px;color:var(--mid)">高値からの下落率</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+      <div style="font-size:11px;color:var(--mid)" id="current-price-date">自動取得中...</div>
       <div id="current-dip-rate" style="font-size:18px;font-weight:700;color:var(--green)">0.00%</div>
     </div>
+    <div style="font-size:10px;color:var(--light);margin-top:4px">高値からの下落率</div>
   </div>
 
   <div class="section-title">📉 下落ラインと追加投資額<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">高値基準価格ベース</span></div>
@@ -419,11 +647,11 @@ canvas { width: 100% !important; }
     <div class="add-form-title">＋ 追加入金を記録</div>
     <div class="form-row">
       <input class="form-input" type="date" id="inp-date" style="flex:1.2">
-      <select class="form-select" id="inp-dip-level">
-        <option value="-10%下落">-10%下落</option>
-        <option value="-20%下落">-20%下落</option>
-        <option value="-30%下落">-30%下落</option>
-        <option value="-40%以上">-40%以上</option>
+      <select class="form-select" id="inp-dip-level" onchange="autoFillAmount()">
+        <option value="-10%下落" data-amount="100000">-10%下落（10万円）</option>
+        <option value="-20%下落" data-amount="200000">-20%下落（20万円）</option>
+        <option value="-30%下落" data-amount="500000">-30%下落（50万円）</option>
+        <option value="-40%以上" data-amount="0">-40%以上（要検討）</option>
       </select>
     </div>
     <div class="form-row">
@@ -449,7 +677,7 @@ canvas { width: 100% !important; }
         <span>年数</span>
         <span class="slider-val" id="dip-year-val">20年後</span>
       </div>
-      <input type="range" min="5" max="20" value="20" id="dip-year-slider" oninput="updateDipChart()">
+      <input type="range" min="1" max="20" value="20" id="dip-year-slider" oninput="updateDipChart()">
     </div>
     <div class="chart-wrap">
       <canvas id="dip-chart" height="220"></canvas>
@@ -462,18 +690,54 @@ canvas { width: 100% !important; }
       <div style="font-size:12px;color:var(--mid)">差額：<span id="dip-diff" style="font-weight:700;color:var(--green)">―</span></div>
     </div>
   </div>
+
+  <div class="card">
+    <div class="card-title">🏆 残高比較（追加投資あり）</div>
+    <table class="compare-table">
+      <thead><tr><th>年利</th><th>10年後</th><th>20年後</th></tr></thead>
+      <tbody id="dip-compare-tbody"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ルール -->
 <div class="page" id="page-rules">
   <div class="section-title">📋 NISA運用ルール</div>
   <div class="card" id="rules-card"></div>
-  <div class="section-title" style="margin-top:4px">💡 年利別シミュレーション（年末残高）</div>
+  <div class="section-title" style="margin-top:4px">💡 年利別シミュレーション（積立のみ・年末残高）</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="compare-table" style="margin:0">
       <thead><tr><th>年</th><th>3%</th><th>5%</th><th>7%</th><th>10%</th></tr></thead>
       <tbody id="full-table"></tbody>
     </table>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div class="page" id="page-settings">
+  <div class="section-title">⚙️ 基本設定</div>
+  <div class="card" id="settings-summary"></div>
+
+  <div class="section-title" style="margin-top:4px">📅 積立額の変更履歴</div>
+  <div class="card" id="tsumitate-history-card"></div>
+
+  <div class="card">
+    <div class="change-form-title">＋ 積立額を変更する</div>
+    <div class="ob-form-group">
+      <label class="ob-label">新しい積立額</label>
+      <div class="ob-input-row">
+        <input class="ob-input" type="number" id="new-tsumitate-amount" step="1000" placeholder="50000">
+        <span class="ob-unit">円</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--mid);margin-bottom:10px">※ 変更月は今月として記録されます</div>
+    <button class="ob-start-btn" style="font-size:14px;padding:12px" onclick="changeTsumitatAmount()">変更を記録する</button>
+  </div>
+
+  <div class="card" style="margin-top:4px">
+    <div class="card-title" style="color:var(--red)">⚠️ データリセット</div>
+    <div style="font-size:12px;color:var(--mid);margin-bottom:12px">全データを削除して初回登録からやり直します</div>
+    <button onclick="resetAll()" style="width:100%;background:var(--red-light);color:var(--red);border:1px solid var(--red);border-radius:var(--radius-sm);padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">リセットする</button>
   </div>
 </div>
 
@@ -486,6 +750,9 @@ canvas { width: 100% !important; }
   </button>
   <button class="nav-item" onclick="gotoPage('rules',this)">
     <span class="nav-icon">📋</span><span>ルール</span>
+  </button>
+  <button class="nav-item" onclick="gotoPage('settings',this)">
+    <span class="nav-icon">⚙️</span><span>設定</span>
   </button>
 </nav>
 
@@ -510,14 +777,14 @@ const RULES = [
   { icon:'📅', label:'積立（5月〜）', val:'50,000円/月（27日）' },
   { icon:'💰', label:'成長枠（初期）', val:'360,000円（2026年3月一括）' },
   { icon:'📌', label:'運用ルール', val:'積立継続 ＋ 下落時のみ追加投資' },
-  { icon:'💰', label:'追加投資額', val:'各30万円（成長投資枠）' },
+  { icon:'💰', label:'追加投資額', val:'-10%:10万円 / -20%:20万円 / -30%:50万円（成長投資枠）' },
   { icon:'⚠️', label:'-40%以上', val:'要検討（イレギュラー対応）' },
 ];
 const DIP_LEVELS = [
-  { label:'-10%ライン', pct:0.10, add:'30万円追加' },
-  { label:'-20%ライン', pct:0.20, add:'30万円追加' },
-  { label:'-30%ライン', pct:0.30, add:'30万円追加' },
-  { label:'-40%以上',  pct:0.40, add:'要検討' },
+  { label:'-10%ライン', pct:0.10, add:'10万円追加', flagKey:'flag_10', amount:100000 },
+  { label:'-20%ライン', pct:0.20, add:'20万円追加', flagKey:'flag_20', amount:200000 },
+  { label:'-30%ライン', pct:0.30, add:'50万円追加', flagKey:'flag_30', amount:500000 },
+  { label:'-40%以上',  pct:0.40, add:'要検討',     flagKey:null,       amount:0 },
 ];
 
 // ── 年切り替え ──
@@ -530,15 +797,15 @@ function changeYear(delta) {
 }
 
 function renderYearView() {
+  const cfg = getConfig();
   const currentYear = new Date().getFullYear();
   const label = document.getElementById('year-nav-label');
   const sub = document.getElementById('year-nav-sub');
   const prevBtn = document.getElementById('year-prev-btn');
-  const nextBtn = document.getElementById('year-next-btn');
   const actualLabel = document.getElementById('actual-label');
 
   label.textContent = viewYear + '年';
-  prevBtn.disabled = viewYear <= START_NISA_YEAR;
+  prevBtn.disabled = viewYear <= cfg.startYear;
 
   if (viewYear === currentYear) {
     sub.textContent = '当年度';
@@ -556,43 +823,31 @@ function renderYearView() {
 
 // ── 積立計算（年指定対応） ──
 function calcTsumitateForYear(year) {
+  const cfg = getConfig();
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
   const currentDay = now.getDate();
 
+  if (year < cfg.startYear) return 0;
+
   let tsumitate = 0;
-
-  // スタート年より前は0
-  if (year < START_NISA_YEAR) return 0;
-
   for (let m = 1; m <= 12; m++) {
-    // スタート：2026年3月から
-    if (year === START_NISA_YEAR && m < START_MONTH) continue;
-
-    // 未来年度はスキップ（ただし未来日付の追加入金は別途処理）
+    if (year === cfg.startYear && m < cfg.startMonth) continue;
     if (year > currentYear) break;
-
-    // 当年の場合、27日を過ぎた月のみカウント
     if (year === currentYear) {
       if (m > currentMonth) break;
-      if (m === currentMonth && currentDay < TSUMITATE_DAY) break;
+      if (m === currentMonth && currentDay < cfg.tsumitatDay) break;
     }
-
-    // 積立額：2026年5月以降は5万、それ以前は3万
-    if (year > 2026 || (year === 2026 && m >= 5)) {
-      tsumitate += 50000;
-    } else {
-      tsumitate += 30000;
-    }
+    tsumitate += getTsumitatAmountAt(year, m);
   }
-
   return tsumitate;
 }
 
-// 成長枠初期：2026年のみ
+// 成長枠初期：設定した年月のみ
 function getGrowthInitialForYear(year) {
-  return year === START_NISA_YEAR ? GROWTH_INITIAL : 0;
+  const cfg = getConfig();
+  return year === cfg.growthYear ? cfg.growthAmount : 0;
 }
 
 // 追加入金：指定年の合計
@@ -605,21 +860,149 @@ function getAdditionalForYear(year) {
 
 // 生涯累計（指定年末まで）
 function calcLifetimeUsed(upToYear) {
+  const cfg = getConfig();
   let total = 0;
-  for (let y = START_NISA_YEAR; y <= upToYear; y++) {
+  for (let y = cfg.startYear; y <= upToYear; y++) {
     total += calcTsumitateForYear(y) + getGrowthInitialForYear(y) + getAdditionalForYear(y);
   }
   return total;
 }
 
-// ── 積立スケジュール定数（START_NISA_YEARは上で宣言済み）──
+// ── ユーザー設定管理 ──
+function loadUserConfig() {
+  try { return JSON.parse(localStorage.getItem('nisa-user-config') || 'null'); } catch(e) { return null; }
+}
+function saveUserConfig(cfg) { localStorage.setItem('nisa-user-config', JSON.stringify(cfg)); }
+
+function loadTsumitatHistory() {
+  try { return JSON.parse(localStorage.getItem('nisa-tsumitate-history') || 'null'); } catch(e) { return null; }
+}
+function saveTsumitatHistory(h) { localStorage.setItem('nisa-tsumitate-history', JSON.stringify(h)); }
+
+// ── オンボーディング ──
+function initOnboardingSelects() {
+  const now = new Date();
+  const yearSelects = ['ob-start-year', 'ob-growth-year'];
+  yearSelects.forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    for (let y = 2020; y <= now.getFullYear() + 1; y++) {
+      sel.innerHTML += `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`;
+    }
+  });
+  // 開始年月のデフォルトを2026年3月に
+  document.getElementById('ob-start-year').value = '2026';
+  document.getElementById('ob-growth-year').value = '2026';
+
+  const monthSelects = ['ob-start-month', 'ob-growth-month'];
+  monthSelects.forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    for (let m = 1; m <= 12; m++) {
+      sel.innerHTML += `<option value="${m}" ${m === 3 ? 'selected' : ''}>${m}</option>`;
+    }
+  });
+}
+
+function completeOnboarding() {
+  const startYear = parseInt(document.getElementById('ob-start-year').value);
+  const startMonth = parseInt(document.getElementById('ob-start-month').value);
+  const tsumitatDay = parseInt(document.getElementById('ob-tsumitate-day').value);
+  const tsumitatAmount = parseInt(document.getElementById('ob-tsumitate-amount').value);
+  const growthYear = parseInt(document.getElementById('ob-growth-year').value);
+  const growthMonth = parseInt(document.getElementById('ob-growth-month').value);
+  const growthAmount = parseInt(document.getElementById('ob-growth-amount').value);
+  const highPriceVal = parseInt(document.getElementById('ob-high-price').value);
+
+  if (!tsumitatAmount || !highPriceVal) { alert('全項目を入力してください'); return; }
+
+  const config = { startYear, startMonth, tsumitatDay, growthYear, growthMonth, growthAmount, highPrice: highPriceVal };
+  saveUserConfig(config);
+
+  // 積立額履歴の初期化
+  const history = [{ year: startYear, month: startMonth, amount: tsumitatAmount }];
+  saveTsumitatHistory(history);
+
+  document.getElementById('onboarding').style.display = 'none';
+  initApp();
+  showToast('🌿 設定が完了しました！');
+}
+
+function resetAll() {
+  if (!confirm('全データをリセットしますか？')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+// ── 積立額変更 ──
+function changeTsumitatAmount() {
+  const amount = parseInt(document.getElementById('new-tsumitate-amount').value);
+  if (!amount || amount < 1000) { showToast('正しい金額を入力してください'); return; }
+  const now = new Date();
+  const history = loadTsumitatHistory() || [];
+  history.push({ year: now.getFullYear(), month: now.getMonth() + 1, amount });
+  saveTsumitatHistory(history);
+  document.getElementById('new-tsumitate-amount').value = '';
+  renderSettingsPage();
+  renderYearView();
+  showToast('✅ 積立額を変更しました：' + amount.toLocaleString() + '円/月');
+}
+
+// 指定年月時点の積立額を取得
+function getTsumitatAmountAt(year, month) {
+  const history = loadTsumitatHistory() || [];
+  let amount = 0;
+  for (const h of history) {
+    if (h.year < year || (h.year === year && h.month <= month)) {
+      amount = h.amount;
+    }
+  }
+  return amount;
+}
+
+// ── 設定ページ描画 ──
+function renderSettingsPage() {
+  const cfg = loadUserConfig();
+  if (!cfg) return;
+  const history = loadTsumitatHistory() || [];
+  const current = history[history.length - 1];
+
+  document.getElementById('settings-summary').innerHTML = `
+    <div class="setting-row"><span class="setting-label">積立開始</span><span class="setting-val">${cfg.startYear}年${cfg.startMonth}月</span></div>
+    <div class="setting-row"><span class="setting-label">積立日</span><span class="setting-val">毎月${cfg.tsumitatDay}日</span></div>
+    <div class="setting-row"><span class="setting-label">現在の積立額</span><span class="setting-val">${current ? current.amount.toLocaleString() : '―'}円/月</span></div>
+    <div class="setting-row"><span class="setting-label">成長枠（初期）</span><span class="setting-val">${cfg.growthAmount.toLocaleString()}円（${cfg.growthYear}年${cfg.growthMonth}月）</span></div>
+    <div class="setting-row"><span class="setting-label">高値基準価格</span><span class="setting-val">${cfg.highPrice.toLocaleString()}円</span></div>
+  `;
+
+  const card = document.getElementById('tsumitate-history-card');
+  if (!history.length) {
+    card.innerHTML = '<div style="text-align:center;color:var(--light);font-size:13px;padding:16px">履歴なし</div>';
+    return;
+  }
+  card.innerHTML = history.map((h, i) => `
+    <div class="tsumitate-history-item">
+      <div>
+        <div class="th-date">${h.year}年${h.month}月〜</div>
+        <div class="th-amount">${h.amount.toLocaleString()}円/月</div>
+      </div>
+      ${i === 0 ? '<span class="th-badge">初期設定</span>' : '<span class="th-badge" style="background:var(--gold-light);color:var(--gold)">変更</span>'}
+    </div>
+  `).join('');
+}
+
+// ── 積立スケジュール定数（ユーザー設定から取得） ──
+function getConfig() {
+  return loadUserConfig() || {
+    startYear: 2026, startMonth: 3, tsumitatDay: 27,
+    growthYear: 2026, growthMonth: 3, growthAmount: 360000, highPrice: 35500
+  };
+}
+
+// 定数互換用（既存コードとの互換性）
 const START_MONTH = 3;
 const TSUMITATE_DAY = 27;
 const GROWTH_INITIAL = 360000;
-
-function calcActualInvested() {
-  return calcTsumitateForYear(new Date().getFullYear());
-}
 
 function getAdditionalTotal() {
   const history = loadHistory();
@@ -720,6 +1103,14 @@ function loadHistory() {
 }
 function saveHistory(h) { localStorage.setItem('nisa-dip-history', JSON.stringify(h)); }
 
+function autoFillAmount() {
+  const sel = document.getElementById('inp-dip-level');
+  const amount = sel.options[sel.selectedIndex].dataset.amount;
+  if (amount && parseInt(amount) > 0) {
+    document.getElementById('inp-amount').value = amount;
+  }
+}
+
 function addDipHistory() {
   const date = document.getElementById('inp-date').value;
   const level = document.getElementById('inp-dip-level').value;
@@ -728,11 +1119,42 @@ function addDipHistory() {
   if (!date) { showToast('日付を入力してください'); return; }
   if (!amount || amount < 1) { showToast('入金額を入力してください'); return; }
 
+  // NISA枠チェック
+  const inputYear = new Date(date).getFullYear();
+  const cfg = getConfig();
+
+  // 生涯投資枠チェック
+  const lifetimeUsed = calcLifetimeUsed(new Date().getFullYear());
+  if (lifetimeUsed + amount > LIFETIME_LIMIT) {
+    const remain = LIFETIME_LIMIT - lifetimeUsed;
+    showToast(`❌ 生涯投資枠超過！残り${remain.toLocaleString()}円まで`);
+    return;
+  }
+
+  // 年間成長投資枠チェック（240万円）
+  const thisYearGrowth = getGrowthInitialForYear(inputYear) + getAdditionalForYear(inputYear);
+  if (thisYearGrowth + amount > GROWTH_LIMIT) {
+    const remain = GROWTH_LIMIT - thisYearGrowth;
+    if (remain <= 0) {
+      showToast(`❌ ${inputYear}年の成長投資枠は上限に達しています`);
+    } else {
+      showToast(`❌ 年間成長投資枠超過！${inputYear}年の残り${remain.toLocaleString()}円まで`);
+    }
+    return;
+  }
+
   const history = loadHistory();
   history.unshift({ id: Date.now(), date, level, amount });
   saveHistory(history);
+
+  // フラグを発動
+  const flagMap = { '-10%下落': 'flag_10', '-20%下落': 'flag_20', '-30%下落': 'flag_30' };
+  if (flagMap[level]) activateFlag(flagMap[level]);
+
   renderDipHistory();
   renderActualInvested();
+  renderDipCompareTable();
+  renderDipLevels();
   document.getElementById('inp-amount').value = '';
   showToast('✅ 入金履歴を記録しました');
 }
@@ -743,6 +1165,23 @@ function deleteDipHistory(id) {
   renderDipHistory();
   renderActualInvested();
   showToast('🗑 履歴を削除しました');
+}
+
+function renderDipCompareTable() {
+  const tbody = document.getElementById('dip-compare-tbody');
+  if (!tbody) return;
+  const rates = [3, 5, 7, 10];
+  const vals10 = rates.map(r => calcDipSeries(r, 10).withDip[9]);
+  const vals20 = rates.map(r => calcDipSeries(r, 20).withDip[19]);
+  const max10 = Math.max(...vals10);
+  const max20 = Math.max(...vals20);
+  tbody.innerHTML = rates.map((r, i) =>
+    `<tr>
+      <td>年利${r}%</td>
+      <td class="${vals10[i]===max10?'best-val':''}">${fmt(vals10[i])}</td>
+      <td class="${vals20[i]===max20?'best-val':''}">${fmt(vals20[i])}</td>
+    </tr>`
+  ).join('');
 }
 
 function renderDipHistory() {
@@ -763,25 +1202,41 @@ function renderDipHistory() {
 }
 
 // ── 初期化 ──
-// ── 価格管理 ──
-// highPrice：高値基準価格（下落ライン計算用）
-// basePrice：現在の基準価格（毎日更新・ヘッダー表示用）
 let highPrice = parseInt(localStorage.getItem('nisa-high-price') || '35500');
 let basePrice = parseInt(localStorage.getItem('nisa-base-price') || '35500');
+let currentRate = 3;
+let dipRate = 5;
+let dipYears = 20;
 
-document.getElementById('high-price-input').value = highPrice;
-document.getElementById('base-price-input').value = basePrice;
-document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
-document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
+function initApp() {
+  const cfg = getConfig();
+  // highPriceはLocalStorageに保存済みの値を優先、なければ初期設定値を使う
+  highPrice = parseInt(localStorage.getItem('nisa-high-price') || cfg.highPrice);
+  basePrice = parseInt(localStorage.getItem('nisa-base-price') || cfg.highPrice);
 
-renderYearView();
-renderDipLevels();
-renderDipHistory();
-renderRules();
-renderCompareTable();
-renderFullTable();
-updateSim();
+  document.getElementById('high-price-input').value = highPrice;
+  document.getElementById('base-price-input').value = basePrice;
+  document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
+  document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
 
+  renderYearView();
+  renderDipLevels();
+  renderDipHistory();
+  renderRules();
+  renderFullTable();
+  updateSim();
+  setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 50);
+  checkNotifBanner();
+  fetchLatestPrice();
+}
+
+// オンボーディング判定
+initOnboardingSelects();
+if (!loadUserConfig()) {
+  document.getElementById('onboarding').style.display = 'block';
+} else {
+  initApp();
+}
 // canvasを確実に描画するユーティリティ
 // 非表示ページでも動くよう、pageの幅から直接計算
 function renderCanvas(canvasId, drawFn) {
@@ -793,20 +1248,25 @@ function renderCanvas(canvasId, drawFn) {
   drawFn(canvas, W);
 }
 
-setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 50);
-
 // ── ページ ──
 function gotoPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'home') setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 100);
+  if (id === 'home') {
+    renderActualInvested();
+    updateSim();
+    setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 100);
+  }
   if (id === 'dip') {
     dipYears = parseInt(document.getElementById('dip-year-slider').value);
     document.getElementById('dip-year-val').textContent = dipYears + '年後';
+    renderDipCompareTable();
     setTimeout(() => renderCanvas('dip-chart', (c,W) => drawDipChart(c, W)), 100);
   }
+  if (id === 'rules') renderRules();
+  if (id === 'settings') renderSettingsPage();
 }
 
 // ── シミュレーション ──
@@ -814,28 +1274,30 @@ function updateSim() {
   const y = parseInt(document.getElementById('year-slider').value);
   document.getElementById('year-val').textContent = y + '年後';
 
-  // 積立総額予測：成長枠初期360,000＋積立枠（3・4月3万、5月〜5万）＋追加入金
+  const cfg = getConfig();
+  const additional = getAdditionalTotal();
+
+  // 積立総額予測：ユーザー設定ベースで計算
   let tsumitateProjected = 0;
   for (let i = 1; i <= y; i++) {
-    if (i === 1) tsumitateProjected += 30000 * 2 + 50000 * 8; // 3・4月3万、5〜12月5万
-    else tsumitateProjected += 50000 * 12;
+    const targetYear = cfg.startYear + i - 1;
+    const months = i === 1 ? 12 - cfg.startMonth + 1 : 12;
+    tsumitateProjected += getTsumitatAmountAt(targetYear, i === 1 ? cfg.startMonth : 1) * months;
   }
-  const additional = getAdditionalTotal();
-  const invested = tsumitateProjected + GROWTH_INITIAL + additional;
+  const invested = tsumitateProjected + cfg.growthAmount + additional;
 
-  // 運用益：SUMMARY[5]は旧ベースなので、実際の積立額ベースで複利計算
-  const rate = 0.05;
-  let bal = 0;
-  for (let i = 1; i <= y; i++) {
-    const yearDeposit = i === 1
-      ? 30000*2 + 50000*8 + GROWTH_INITIAL + additional
-      : 50000*12;
-    bal = (bal + yearDeposit) * (1 + rate);
-  }
-
+  // 運用益：選択中の年利で複利計算
+  const { noDip } = calcDipSeries(currentRate, y);
+  const bal = noDip[y - 1];
   const gain = bal - invested;
+
   document.getElementById('sim-invested').textContent = fmt(invested);
   document.getElementById('sim-gain').textContent = (gain >= 0 ? '+' : '') + fmt(gain);
+
+  // 年利ラベルを更新
+  const gainCard = document.getElementById('sim-gain')?.closest('.summary-card');
+  if (gainCard) gainCard.querySelector('.summary-label').textContent = `📊 運用益（${currentRate}%）`;
+
   renderCanvas('main-chart', (c,W) => drawMainChart(y, c, W));
 }
 
@@ -858,7 +1320,8 @@ function drawMainChart(highlightYear, canvasEl, fixedW) {
   canvas.width = W*dpr; canvas.height = H*dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-  const data = SUMMARY[currentRate];
+  // SUMMARYではなく実際のスケジュールで計算
+  const { noDip: data } = calcDipSeries(currentRate, 20);
   const max = Math.max(...data);
   const pad = {top:20,right:16,bottom:30,left:52};
   const w = W-pad.left-pad.right, h = H-pad.top-pad.bottom;
@@ -888,10 +1351,7 @@ function drawMainChart(highlightYear, canvasEl, fixedW) {
   ctx.fillText(fmt(data[hy]),hx,hyy-10);
 }
 
-// ── 追加投資グラフ用の状態 ──
-let dipRate = 5;
-let dipYears = 20;
-
+// ── 追加投資グラフ用関数 ──
 function setDipRate(r, el) {
   dipRate = r;
   document.querySelectorAll('.dip-rate-tab').forEach(t => t.classList.remove('active'));
@@ -1008,6 +1468,7 @@ function updateHighPrice() {
   highPrice = v;
   localStorage.setItem('nisa-high-price', v);
   renderDipLevels();
+  checkDipAlert();
   showToast('🏔 高値基準価格を更新しました：' + v.toLocaleString() + '円');
 }
 
@@ -1018,11 +1479,140 @@ function updateCurrentPrice() {
   localStorage.setItem('nisa-base-price', v);
   document.getElementById('header-price').textContent = v.toLocaleString() + '円';
   renderDipLevels();
+  checkDipAlert();
   showToast('💹 現在の基準価格を更新しました：' + v.toLocaleString() + '円');
 }
 
+// ── 下落チェック・通知 ──
+const DIP_ALERT_LEVELS = [
+  { pct: 0.40, label: '-40%以上',   emoji: '🆘', cls: 'level-40', flagKey: null },
+  { pct: 0.30, label: '-30%ライン', emoji: '🚨', cls: 'level-30', flagKey: 'flag_30' },
+  { pct: 0.20, label: '-20%ライン', emoji: '⚠️', cls: 'level-20', flagKey: 'flag_20' },
+  { pct: 0.10, label: '-10%ライン', emoji: '📉', cls: 'level-10', flagKey: 'flag_10' },
+];
+
+function checkDipAlert() {
+  const banner = document.getElementById('dip-alert-banner');
+  const titleEl = document.getElementById('dip-alert-title');
+  const bodyEl = document.getElementById('dip-alert-body');
+  if (!banner || !highPrice) return;
+
+  const rate = highPrice > 0 ? (basePrice - highPrice) / highPrice : 0;
+  const flags = getDipFlags();
+
+  // 新高値チェック（×1.02バッファ）
+  checkNewHighPrice();
+
+  // 到達しているラインを全件チェック（-10%を飛ばした場合も考慮）
+  let highestHit = null;
+  let newlyHit = [];
+
+  for (const level of DIP_ALERT_LEVELS) {
+    if (rate <= -level.pct && level.flagKey) {
+      highestHit = level;
+      // まだ発動していないフラグを発動
+      if (!flags[level.flagKey]) {
+        newlyHit.push(level);
+        activateFlag(level.flagKey);
+      }
+    }
+  }
+
+  // 新規発動があれば通知
+  if (newlyHit.length > 0) {
+    const topLevel = newlyHit[0];
+    sendDipNotification(topLevel, rate);
+  }
+
+  // バナー表示（最も深刻なライン）
+  if (highestHit) {
+    banner.className = `dip-alert-banner show ${highestHit.cls}`;
+    titleEl.textContent = `${highestHit.emoji} ${highestHit.label}到達！`;
+    bodyEl.textContent = `現在 ${basePrice.toLocaleString()}円（高値 ${highPrice.toLocaleString()}円 / 下落率 ${(rate*100).toFixed(1)}%）追加投資を検討してください。`;
+  } else {
+    banner.className = 'dip-alert-banner';
+  }
+
+  renderDipLevels();
+}
+
+function sendDipNotification(level, rate) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const lastKey = `nisa-last-notif-${level.cls}`;
+  const lastDate = localStorage.getItem(lastKey);
+  const today = new Date().toISOString().slice(0, 10);
+  if (lastDate === today) return;
+  new Notification('NISA運用ダッシュボード', {
+    body: `${level.emoji} ${level.label}到達！\n現在 ${basePrice.toLocaleString()}円（下落率 ${(rate*100).toFixed(1)}%）`,
+    icon: './icon-192.png',
+    tag: level.cls,
+  });
+  localStorage.setItem(lastKey, today);
+}
+
+function requestNotifPermission() {
+  if (!('Notification' in window)) { showToast('このブラウザは通知非対応です'); return; }
+  Notification.requestPermission().then(perm => {
+    document.getElementById('notif-banner').classList.remove('show');
+    if (perm === 'granted') {
+      showToast('🔔 通知を許可しました');
+      checkDipAlert();
+    } else {
+      showToast('通知が拒否されました');
+    }
+  });
+}
+
+function checkNotifBanner() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    document.getElementById('notif-banner').classList.add('show');
+  }
+}
+
+// ── サイクル・フラグ管理 ──
+function loadCycle() {
+  try { return JSON.parse(localStorage.getItem('nisa-cycle') || '{"status":"idle","flags":{}}'); } catch(e) { return {status:'idle',flags:{}}; }
+}
+function saveCycle(c) { localStorage.setItem('nisa-cycle', JSON.stringify(c)); }
+
+function getCycleStatus() { return loadCycle().status; }
+function getDipFlags() { return loadCycle().flags || {}; }
+
+function activateFlag(flagKey) {
+  const cycle = loadCycle();
+  cycle.status = 'active';
+  cycle.flags[flagKey] = true;
+  saveCycle(cycle);
+}
+
+function resetCycle() {
+  saveCycle({ status: 'idle', flags: {} });
+  showToast('🔄 下落サイクルをリセットしました');
+}
+
+// 新高値チェック（高値×1.02を超えたらidleにリセット）
+function checkNewHighPrice() {
+  if (basePrice > highPrice * 1.02) {
+    const banner = document.getElementById('new-high-banner');
+    if (banner) banner.classList.add('show');
+    if (getCycleStatus() === 'active') resetCycle();
+  } else {
+    const banner = document.getElementById('new-high-banner');
+    if (banner) banner.classList.remove('show');
+  }
+}
+
+function confirmHighPriceUpdate() {
+  highPrice = basePrice;
+  localStorage.setItem('nisa-high-price', highPrice);
+  document.getElementById('high-price-input').value = highPrice;
+  document.getElementById('new-high-banner').classList.remove('show');
+  renderDipLevels();
+  showToast('🏔 高値基準価格を更新しました：' + highPrice.toLocaleString() + '円');
+}
+
 function renderDipLevels() {
-  // 下落率を高値基準価格ベースで計算
   const dipRate = highPrice > 0 ? (basePrice - highPrice) / highPrice * 100 : 0;
   const dipRateEl = document.getElementById('current-dip-rate');
   if (dipRateEl) {
@@ -1031,42 +1621,80 @@ function renderDipLevels() {
     dipRateEl.style.color = dipRate >= 0 ? 'var(--green)' : 'var(--red)';
   }
 
+  const flags = getDipFlags();
+  const cycleStatus = getCycleStatus();
+
+  // サイクル状態バッジ
+  const cycleBadge = document.getElementById('cycle-status-badge');
+  if (cycleBadge) {
+    cycleBadge.textContent = cycleStatus === 'active' ? '🔴 サイクル進行中' : '🟢 未発動';
+    cycleBadge.style.color = cycleStatus === 'active' ? 'var(--red)' : 'var(--green)';
+  }
+
   document.getElementById('dip-levels-card').innerHTML = DIP_LEVELS.map(d => {
-    const linePrice = Math.round(highPrice * (1-d.pct));
+    const linePrice = Math.round(highPrice * (1 - d.pct));
     const isReached = basePrice <= linePrice;
     const isIrr = d.pct >= 0.4;
+    const isFired = d.flagKey ? !!flags[d.flagKey] : false;
     return `<div class="dip-row">
       <div>
-        <div class="dip-row-label">${d.label}</div>
+        <div class="dip-row-label">${d.label}
+          ${isFired ? '<span style="font-size:10px;background:var(--gold-light);color:var(--gold);padding:1px 6px;border-radius:99px;margin-left:6px">発動済</span>' : ''}
+        </div>
         <div class="dip-row-add">${d.add}</div>
       </div>
       <div style="text-align:right">
         <div class="dip-row-price" style="${isIrr ? 'color:var(--mid)' : isReached ? 'color:var(--red)' : ''}">
           ≈ ${linePrice.toLocaleString()}円
-          ${isReached && !isIrr ? '<span style="font-size:10px;background:var(--red-light);color:var(--red);padding:1px 6px;border-radius:99px;margin-left:4px">到達！</span>' : ''}
+          ${isReached && !isIrr && !isFired ? '<span style="font-size:10px;background:var(--red-light);color:var(--red);padding:1px 6px;border-radius:99px;margin-left:4px">到達！</span>' : ''}
         </div>
-        <div style="font-size:10px;color:var(--light)">▼${Math.round(d.pct*100)}%（高値基準）</div>
+        <div style="font-size:10px;color:var(--light)">▼${Math.round(d.pct * 100)}%（高値基準）</div>
       </div>
     </div>`;
   }).join('');
 }
 
 function renderRules() {
-  document.getElementById('rules-card').innerHTML = RULES.map(r =>
+  const cfg = getConfig();
+  const history = loadTsumitatHistory() || [];
+  const current = history[history.length - 1];
+  const rules = [
+    { icon:'📦', label:'投資商品', val:'eMAXIS Slim 全世界株式（オール・カントリー）' },
+    { icon:'📅', label:'積立開始', val:`${cfg.startYear}年${cfg.startMonth}月` },
+    { icon:'📅', label:'積立日', val:`毎月${cfg.tsumitatDay}日` },
+    { icon:'💴', label:'現在の積立額', val:`${current ? current.amount.toLocaleString() : '―'}円/月` },
+    { icon:'💰', label:'成長枠（初期）', val:`${cfg.growthAmount.toLocaleString()}円（${cfg.growthYear}年${cfg.growthMonth}月）` },
+    { icon:'📌', label:'運用ルール', val:'積立継続 ＋ 下落時のみ追加投資' },
+    { icon:'💰', label:'追加投資額', val:'-10%:10万円 / -20%:20万円 / -30%:50万円（成長投資枠）' },
+    { icon:'⚠️', label:'-40%以上', val:'要検討（イレギュラー対応）' },
+  ];
+  document.getElementById('rules-card').innerHTML = rules.map(r =>
     `<div class="rule-item"><div class="rule-icon">${r.icon}</div><div><div class="rule-label">${r.label}</div><div class="rule-val">${r.val}</div></div></div>`
   ).join('');
 }
 
+// 年利・年数指定で残高を計算（SUMMARYの代わり）
+function calcBalance(rate, year) {
+  const { noDip } = calcDipSeries(rate, year);
+  return noDip[year - 1];
+}
+
 function renderCompareTable() {
-  document.getElementById('compare-tbody').innerHTML = [3,5,7,10].map(r =>
-    `<tr><td>年利${r}%</td><td class="${r===10?'best-val':''}">${fmt(SUMMARY[r][9])}</td><td class="${r===10?'best-val':''}">${fmt(SUMMARY[r][19])}</td></tr>`
-  ).join('');
+  document.getElementById('compare-tbody').innerHTML = [3,5,7,10].map(r => {
+    const y10 = calcBalance(r, 10);
+    const y20 = calcBalance(r, 20);
+    const max10 = Math.max(...[3,5,7,10].map(x => calcBalance(x, 10)));
+    const max20 = Math.max(...[3,5,7,10].map(x => calcBalance(x, 20)));
+    return `<tr><td>年利${r}%</td><td class="${y10===max10?'best-val':''}">${fmt(y10)}</td><td class="${y20===max20?'best-val':''}">${fmt(y20)}</td></tr>`;
+  }).join('');
 }
 
 function renderFullTable() {
   document.getElementById('full-table').innerHTML = Array.from({length:20},(_,i) => {
-    const max = Math.max(...[3,5,7,10].map(r=>SUMMARY[r][i]));
-    return `<tr><td>${i+1}年</td>${[3,5,7,10].map(r=>`<td class="${SUMMARY[r][i]===max?'best-val':''}">${fmt(SUMMARY[r][i])}</td>`).join('')}</tr>`;
+    const y = i + 1;
+    const vals = [3,5,7,10].map(r => calcBalance(r, y));
+    const max = Math.max(...vals);
+    return `<tr><td>${y}年</td>${vals.map((v,j) => `<td class="${v===max?'best-val':''}">${fmt(v)}</td>`).join('')}</tr>`;
   }).join('');
 }
 
@@ -1087,19 +1715,25 @@ window.addEventListener('resize', () => {
 // 基準価額の自動取得（現在価格のみ更新）
 async function fetchLatestPrice() {
   try {
-    const res = await fetch('/.netlify/functions/get-price');
+    const url = `https://script.google.com/macros/s/AKfycbxpqamvYslmIhrsoPODq6kW-wfBf74A1nSfO3r9ESL_Gu0Ja7S8dFDL-vFl_2w_JlrX/exec?highPrice=${highPrice}`;
+    const res = await fetch(url);
     const data = await res.json();
     if (data.price) {
       basePrice = parseInt(data.price);
       localStorage.setItem('nisa-base-price', basePrice);
       document.getElementById('base-price-input').value = basePrice;
       document.getElementById('header-price').textContent = basePrice.toLocaleString() + '円';
-      renderDipLevels(); // 下落率の再計算
-      showToast('📈 現在価格を更新しました：' + basePrice.toLocaleString() + '円');
+      const dateLabel = document.getElementById('current-price-date');
+      if (dateLabel && data.date) {
+        const d = data.date.split('/');
+        dateLabel.textContent = `${d[1]}月${d[2]}日時点の最新価格`;
+      }
+      renderDipLevels();
+      checkDipAlert(); // 下落チェック
+      showToast('📈 基準価額を更新しました：' + basePrice.toLocaleString() + '円');
     }
   } catch(e) { console.log('価格取得失敗'); }
 }
-fetchLatestPrice();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
