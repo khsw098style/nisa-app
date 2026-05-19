@@ -339,7 +339,7 @@ describe('複利計算エンジン', () => {
  */
 function parseRakutenCSVText(text, dataDate) {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const ORUKAN_NAME     = 'eMAXIS Slim';
+  const ORUKAN_NAME     = 'eMAXIS Slim 全世界株式';
   const TSUMITATE_LABEL = 'つみたて投資枠';
   const GROWTH_LABEL    = '成長投資枠';
 
@@ -361,14 +361,14 @@ function parseRakutenCSVText(text, dataDate) {
   for (const line of lines) {
     if (!line.includes(ORUKAN_NAME)) continue;
     const cols = parseLine(line);
-    if (cols.length < 17) continue;
-    const account  = cols[3];
-    const units    = toNum(cols[4]);
-    const avgPrice = toNum(cols[6]);
-    const curPrice = toNum(cols[8]);
-    const evalAmt  = toNum(cols[14]);
-    const gainAmt  = toNum(cols[16]);
-    const gainPct  = toNum(cols[17]);
+    if (cols.length < 15) continue;
+    const account  = cols[1];   // 口座区分
+    const units    = toNum(cols[4]);   // 保有数量
+    const avgPrice = toNum(cols[7]);   // 平均取得価額
+    const curPrice = toNum(cols[9]);   // 基準価額
+    const evalAmt  = toNum(cols[12]);  // 時価評価額
+    const gainAmt  = toNum(cols[13]);  // 評価損益額
+    const gainPct  = toNum(cols[14]);  // 評価損益率
     const row = { units, avgPrice, curPrice, evalAmt, gainAmt, gainPct };
     if (account.includes(TSUMITATE_LABEL))   tsumitate = row;
     else if (account.includes(GROWTH_LABEL)) growth    = row;
@@ -390,9 +390,14 @@ function extractDateFromFilename(filename) {
   return new Date().toLocaleDateString('ja-JP');
 }
 
-/** テスト用CSVデータ生成 */
+/** テスト用CSVデータ生成（INVSTファイル形式）
+ * [0]:種別 [1]:口座区分 [2]:ファンド名 [3]:分配金 [4]:保有数量
+ * [5]:通常数量 [6]:積立数量 [7]:平均取得価額 [8]:取得総額
+ * [9]:基準価額 [10]:前日比 [11]:前月比 [12]:時価評価額
+ * [13]:評価損益額 [14]:評価損益率
+ */
 function makeCSVRow(account, units, avgPrice, curPrice, evalAmt, gainAmt, gainPct) {
-  return `"投資信託","","eMAXIS Slim 全世界株式(オール・カントリー)","${account}","${units}","口","${avgPrice}","円","${curPrice}","円","","","+27","円","${evalAmt}","-","${gainAmt}","${gainPct}"`;
+  return `"投資信託","${account}","eMAXIS Slim 全世界株式(オール・カントリー)(オルカン)","再投資型","${units}","0","${units}","${avgPrice}","59,999","${curPrice}","-454","785","${evalAmt}","${gainAmt}","${gainPct}","-","-","-","-","-","-"`;
 }
 
 describe('楽天証券CSVパース', () => {

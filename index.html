@@ -1581,19 +1581,19 @@ function saveHoldings(data) {
 
 /**
  * 楽天証券CSVをパースして保有データを返す（Shift_JIS対応）
+ * 対応ファイル: assetbalance_INVST__*.csv（投資信託保有一覧）
  * @param {ArrayBuffer} buffer - FileReaderで読み込んだバイナリ
  * @param {string} dataDate - ファイル名から取得したデータ日付
  * @returns {{ tsumitate: object, growth: object, importedAt: string } | null}
  */
 function parseRakutenCSV(buffer, dataDate) {
-  // Shift_JISをUTF-8にデコード
   const decoder = new TextDecoder('shift-jis');
   const text = decoder.decode(buffer);
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-  const ORUKAN_NAME = 'eMAXIS Slim';
+  const ORUKAN_NAME     = 'eMAXIS Slim 全世界株式';
   const TSUMITATE_LABEL = 'つみたて投資枠';
-  const GROWTH_LABEL = '成長投資枠';
+  const GROWTH_LABEL    = '成長投資枠';
 
   /**
    * CSV行をカラム配列に分解（クォート対応）
@@ -1613,7 +1613,7 @@ function parseRakutenCSV(buffer, dataDate) {
   }
 
   /** カンマ区切り数値文字列を数値に変換 */
-  function toNum(str) { return parseFloat(str.replace(/,/g, '')) || 0; }
+  function toNum(str) { return parseFloat((str || '').replace(/,/g, '')) || 0; }
 
   let tsumitate = null;
   let growth = null;
@@ -1621,20 +1621,23 @@ function parseRakutenCSV(buffer, dataDate) {
   for (const line of lines) {
     if (!line.includes(ORUKAN_NAME)) continue;
     const cols = parseLine(line);
-    // 列構成: 種別, 空, 銘柄名, 口座, 保有数量, 単位, 平均取得価額, 単位, 現在値, 単位, 現在値更新日, 参考, 前日比, 単位, 時価評価額, 外貨, 評価損益, 損益率
-    if (cols.length < 17) continue;
-    const account  = cols[3];  // 口座種別
-    const units    = toNum(cols[4]);   // 保有数量（口）
-    const avgPrice = toNum(cols[6]);   // 平均取得価額
-    const curPrice = toNum(cols[8]);   // 現在値
-    const evalAmt  = toNum(cols[14]);  // 時価評価額
-    const gainAmt  = toNum(cols[16]);  // 評価損益額
-    const gainPct  = toNum(cols[17]);  // 評価損益率
+    if (cols.length < 15) continue;
+
+    // INVSTファイルの列構成
+    // [1]:口座区分 [2]:ファンド名 [4]:保有数量 [7]:平均取得価額
+    // [9]:基準価額 [12]:時価評価額 [13]:評価損益額 [14]:評価損益率
+    const account  = cols[1];
+    const units    = toNum(cols[4]);
+    const avgPrice = toNum(cols[7]);
+    const curPrice = toNum(cols[9]);
+    const evalAmt  = toNum(cols[12]);
+    const gainAmt  = toNum(cols[13]);
+    const gainPct  = toNum(cols[14]);
 
     const row = { units, avgPrice, curPrice, evalAmt, gainAmt, gainPct };
 
-    if (account.includes(TSUMITATE_LABEL)) tsumitate = row;
-    else if (account.includes(GROWTH_LABEL))   growth    = row;
+    if (account.includes(TSUMITATE_LABEL))      tsumitate = row;
+    else if (account.includes(GROWTH_LABEL))    growth    = row;
   }
 
   if (!tsumitate && !growth) return null;
