@@ -492,6 +492,35 @@ canvas { width: 100% !important; }
 <!-- ホーム -->
 <div class="page active" id="page-home">
 
+  <!-- 保有データカード（CSVインポート後に表示） -->
+  <div class="card" id="holdings-card" style="display:none">
+    <div class="card-title">📈 保有状況（楽天証券）<span id="holdings-date" style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px"></span></div>
+    <div class="breakdown-row">
+      <div><span class="breakdown-label">保有口数（合計）</span></div>
+      <div class="breakdown-val" id="h-total-units">―</div>
+    </div>
+    <div class="breakdown-row">
+      <div><span class="breakdown-label">つみたて投資枠</span><span class="breakdown-badge">口数</span></div>
+      <div class="breakdown-val" id="h-tsumitate-units">―</div>
+    </div>
+    <div class="breakdown-row">
+      <div><span class="breakdown-label">成長投資枠</span><span class="breakdown-badge gold">口数</span></div>
+      <div class="breakdown-val" id="h-growth-units">―</div>
+    </div>
+    <div class="breakdown-row">
+      <div><span class="breakdown-label">時価評価額</span></div>
+      <div class="breakdown-val" id="h-total-value">―</div>
+    </div>
+    <div class="breakdown-row">
+      <div><span class="breakdown-label">平均取得価額</span></div>
+      <div class="breakdown-val" id="h-avg-price">―</div>
+    </div>
+    <div class="breakdown-row" style="border-bottom:none">
+      <div><span class="breakdown-label">含み損益</span></div>
+      <div class="breakdown-val" id="h-unrealized" style="font-size:16px">―</div>
+    </div>
+  </div>
+
   <!-- 年切り替え -->
   <div class="year-nav">
     <button class="year-nav-btn" id="year-prev-btn" onclick="changeYear(-1)">‹</button>
@@ -735,6 +764,18 @@ canvas { width: 100% !important; }
   </div>
 
   <div class="card" style="margin-top:4px">
+    <div class="card-title">📥 楽天証券CSVインポート</div>
+    <div style="font-size:12px;color:var(--mid);margin-bottom:12px">楽天証券の「保有資産一覧」からCSVをダウンロードしてインポートしてください</div>
+    <label style="display:block;background:var(--green-light);border:1.5px dashed var(--green);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer">
+      <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="importCSV(this)">
+      <div style="font-size:24px;margin-bottom:6px">📂</div>
+      <div style="font-size:13px;font-weight:700;color:var(--green)">CSVファイルを選択</div>
+      <div style="font-size:11px;color:var(--mid);margin-top:4px">assetbalance_all_*.csv</div>
+    </label>
+    <div id="csv-status" style="margin-top:10px;font-size:12px;color:var(--mid);text-align:center"></div>
+  </div>
+
+  <div class="card" style="margin-top:4px">
     <div class="card-title" style="color:var(--red)">⚠️ データリセット</div>
     <div style="font-size:12px;color:var(--mid);margin-bottom:12px">全データを削除して初回登録からやり直します</div>
     <button onclick="resetAll()" style="width:100%;background:var(--red-light);color:var(--red);border:1px solid var(--red);border-radius:var(--radius-sm);padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">リセットする</button>
@@ -801,6 +842,7 @@ const STORAGE_KEYS = Object.freeze({
   HIGH_PRICE:         'nisa-high-price',
   CYCLE_STATUS:       'nisa-cycle-status',
   NOTIF_PREFIX:       'nisa-last-notif-',
+  HOLDINGS:           'nisa-holdings',       // 保有データ（CSVインポート）
 });
 
 // ════════════════════════════════════════
@@ -1253,6 +1295,7 @@ function initApp() {
   updateSim();
   setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 50);
   checkNotifBanner();
+  renderHoldings();
   fetchLatestPrice();
 }
 
@@ -1518,7 +1561,178 @@ function updateCurrentPrice() {
   showToast('💹 現在の基準価格を更新しました：' + v.toLocaleString() + '円');
 }
 
-// ── 下落チェック・通知 ──
+// ── 保有データ管理（CSVインポート）──
+
+/**
+ * 保有データをLocalStorageから読み込む
+ * @returns {object|null}
+ */
+function loadHoldings() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.HOLDINGS) || 'null'); } catch(e) { return null; }
+}
+
+/**
+ * 保有データをLocalStorageに保存する
+ * @param {object} data
+ */
+function saveHoldings(data) {
+  localStorage.setItem(STORAGE_KEYS.HOLDINGS, JSON.stringify(data));
+}
+
+/**
+ * 楽天証券CSVをパースして保有データを返す（Shift_JIS対応）
+ * @param {ArrayBuffer} buffer - FileReaderで読み込んだバイナリ
+ * @param {string} dataDate - ファイル名から取得したデータ日付
+ * @returns {{ tsumitate: object, growth: object, importedAt: string } | null}
+ */
+function parseRakutenCSV(buffer, dataDate) {
+  // Shift_JISをUTF-8にデコード
+  const decoder = new TextDecoder('shift-jis');
+  const text = decoder.decode(buffer);
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  const ORUKAN_NAME = 'eMAXIS Slim';
+  const TSUMITATE_LABEL = 'つみたて投資枠';
+  const GROWTH_LABEL = '成長投資枠';
+
+  /**
+   * CSV行をカラム配列に分解（クォート対応）
+   * @param {string} line
+   * @returns {string[]}
+   */
+  function parseLine(line) {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    cols.push(cur.trim());
+    return cols;
+  }
+
+  /** カンマ区切り数値文字列を数値に変換 */
+  function toNum(str) { return parseFloat(str.replace(/,/g, '')) || 0; }
+
+  let tsumitate = null;
+  let growth = null;
+
+  for (const line of lines) {
+    if (!line.includes(ORUKAN_NAME)) continue;
+    const cols = parseLine(line);
+    // 列構成: 種別, 空, 銘柄名, 口座, 保有数量, 単位, 平均取得価額, 単位, 現在値, 単位, 現在値更新日, 参考, 前日比, 単位, 時価評価額, 外貨, 評価損益, 損益率
+    if (cols.length < 17) continue;
+    const account  = cols[3];  // 口座種別
+    const units    = toNum(cols[4]);   // 保有数量（口）
+    const avgPrice = toNum(cols[6]);   // 平均取得価額
+    const curPrice = toNum(cols[8]);   // 現在値
+    const evalAmt  = toNum(cols[14]);  // 時価評価額
+    const gainAmt  = toNum(cols[16]);  // 評価損益額
+    const gainPct  = toNum(cols[17]);  // 評価損益率
+
+    const row = { units, avgPrice, curPrice, evalAmt, gainAmt, gainPct };
+
+    if (account.includes(TSUMITATE_LABEL)) tsumitate = row;
+    else if (account.includes(GROWTH_LABEL))   growth    = row;
+  }
+
+  if (!tsumitate && !growth) return null;
+
+  return {
+    tsumitate: tsumitate || { units:0, avgPrice:0, curPrice:0, evalAmt:0, gainAmt:0, gainPct:0 },
+    growth:    growth    || { units:0, avgPrice:0, curPrice:0, evalAmt:0, gainAmt:0, gainPct:0 },
+    importedAt: dataDate || new Date().toLocaleDateString('ja-JP'),
+  };
+}
+
+/**
+ * ファイル名から日付を取得する
+ * assetbalance_all__20260510_221127.csv → 2026/05/10
+ * @param {string} filename
+ * @returns {string} YYYY/MM/DD形式 or 取り込み日
+ */
+function extractDateFromFilename(filename) {
+  const match = filename.match(/(\d{4})(\d{2})(\d{2})_\d{6}/);
+  if (match) return `${match[1]}/${match[2]}/${match[3]}`;
+  return new Date().toLocaleDateString('ja-JP');
+}
+
+/**
+ * CSVファイルを読み込んでインポートする
+ * @param {HTMLInputElement} input
+ */
+function importCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('csv-status');
+  statusEl.textContent = '読み込み中...';
+
+  const dataDate = extractDateFromFilename(file.name);
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const data = parseRakutenCSV(e.target.result, dataDate);
+    if (!data) {
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = '❌ オルカンのデータが見つかりませんでした';
+      return;
+    }
+    saveHoldings(data);
+    renderHoldings();
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = `✅ インポート完了（${data.importedAt}時点のデータ）`;
+    showToast('📥 CSVをインポートしました');
+    input.value = '';
+  };
+  reader.onerror = () => {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '❌ ファイルの読み込みに失敗しました';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/**
+ * 保有データカードを描画する
+ */
+function renderHoldings() {
+  const data = loadHoldings();
+  const card = document.getElementById('holdings-card');
+  if (!card) return;
+
+  if (!data) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+
+  const t = data.tsumitate;
+  const g = data.growth;
+  const totalUnits = t.units + g.units;
+  const totalEval  = t.evalAmt + g.evalAmt;
+  const totalGain  = t.gainAmt + g.gainAmt;
+  // 加重平均取得価額
+  const avgPrice = totalUnits > 0
+    ? (t.avgPrice * t.units + g.avgPrice * g.units) / totalUnits
+    : 0;
+  const gainPct = totalEval - totalGain > 0
+    ? (totalGain / (totalEval - totalGain)) * 100
+    : 0;
+
+  document.getElementById('holdings-date').textContent  = data.importedAt + '時点';
+  document.getElementById('h-total-units').textContent  = totalUnits.toLocaleString() + '口';
+  document.getElementById('h-tsumitate-units').textContent = t.units.toLocaleString() + '口';
+  document.getElementById('h-growth-units').textContent    = g.units.toLocaleString() + '口';
+  document.getElementById('h-total-value').textContent  = totalEval.toLocaleString() + '円';
+  document.getElementById('h-avg-price').textContent    = Math.round(avgPrice).toLocaleString() + '円';
+
+  const gainEl = document.getElementById('h-unrealized');
+  const sign = totalGain >= 0 ? '+' : '';
+  gainEl.textContent = `${sign}${totalGain.toLocaleString()}円（${sign}${gainPct.toFixed(2)}%）`;
+  gainEl.style.color = totalGain >= 0 ? 'var(--green)' : 'var(--red)';
+}
 function checkDipAlert() {
   const banner = document.getElementById('dip-alert-banner');
   const titleEl = document.getElementById('dip-alert-title');
