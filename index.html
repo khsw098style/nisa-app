@@ -1587,8 +1587,17 @@ function saveHoldings(data) {
  * @returns {{ tsumitate: object, growth: object, importedAt: string } | null}
  */
 function parseRakutenCSV(buffer, dataDate) {
-  const decoder = new TextDecoder('shift-jis');
-  const text = decoder.decode(buffer);
+  // cp932（Windows-31J）はshift_jisの拡張。環境によって指定が異なるため両方試みる
+  let text;
+  try {
+    text = new TextDecoder('shift_jis').decode(buffer);
+  } catch(e) {
+    try {
+      text = new TextDecoder('shift-jis').decode(buffer);
+    } catch(e2) {
+      text = new TextDecoder('utf-8').decode(buffer);
+    }
+  }
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
   const ORUKAN_NAME     = 'eMAXIS Slim 全世界株式';
