@@ -1630,18 +1630,20 @@ function parseRakutenCSV(buffer, dataDate) {
   for (const line of lines) {
     if (!line.includes(ORUKAN_NAME)) continue;
     const cols = parseLine(line);
-    if (cols.length < 15) continue;
+    if (cols.length < 17) continue;
 
-    // INVSTファイルの列構成
-    // [1]:口座区分 [2]:ファンド名 [4]:保有数量 [7]:平均取得価額
-    // [9]:基準価額 [12]:時価評価額 [13]:評価損益額 [14]:評価損益率
-    const account  = cols[1];
+    // assetbalance_all ファイルの列構成
+    // [0]:種別 [1]:銘柄コード [2]:銘柄名 [3]:口座 [4]:保有数量 [5]:単位
+    // [6]:平均取得価額 [7]:単位 [8]:現在値 [9]:単位 [10]:現在値更新日
+    // [11]:参考為替 [12]:前日比 [13]:単位 [14]:時価評価額 [15]:外貨
+    // [16]:評価損益額 [17]:評価損益率
+    const account  = cols[3];
     const units    = toNum(cols[4]);
-    const avgPrice = toNum(cols[7]);
-    const curPrice = toNum(cols[9]);
-    const evalAmt  = toNum(cols[12]);
-    const gainAmt  = toNum(cols[13]);
-    const gainPct  = toNum(cols[14]);
+    const avgPrice = toNum(cols[6]);
+    const curPrice = toNum(cols[8]);
+    const evalAmt  = toNum(cols[14]);
+    const gainAmt  = toNum(cols[16]);
+    const gainPct  = toNum(cols[17]);
 
     const row = { units, avgPrice, curPrice, evalAmt, gainAmt, gainPct };
 
