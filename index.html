@@ -382,6 +382,38 @@ canvas { width: 100% !important; }
   cursor: pointer; font-family: var(--font); flex-shrink: 0;
 }
 
+/* 目標金額進捗バー */
+.goal-card {
+  background: linear-gradient(135deg, #1c2b24 0%, #2d4a38 100%);
+  border-radius: var(--radius); padding: 18px 20px; color: white;
+  margin-bottom: 12px; position: relative; overflow: hidden;
+}
+.goal-label { font-size: 12px; opacity: 0.75; margin-bottom: 4px; }
+.goal-current { font-size: 28px; font-weight: 700; line-height: 1; }
+.goal-target { font-size: 11px; opacity: 0.6; margin-top: 4px; }
+.goal-pct {
+  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+  font-size: 32px; font-weight: 700; color: #4ade80;
+}
+.goal-bar-wrap {
+  margin-top: 14px; height: 8px;
+  background: rgba(255,255,255,0.15); border-radius: 99px; overflow: hidden;
+}
+.goal-bar-fill {
+  height: 100%; border-radius: 99px; background: #4ade80;
+  transition: width 0.6s ease;
+}
+.goal-remain { font-size: 11px; opacity: 0.6; margin-top: 6px; }
+.goal-no-data {
+  background: var(--sand); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 12px; color: var(--mid);
+  margin-bottom: 12px; text-align: center;
+}
+
+/* 価格推移グラフ */
+.price-chart-card { background: var(--white); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 8px var(--shadow); margin-bottom: 12px; }
+.price-chart-title { font-size: 13px; color: var(--mid); font-weight: 500; margin-bottom: 10px; }
+
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--charcoal); color: white; padding: 10px 20px; border-radius: 99px; font-size: 13px; opacity: 0; transition: all 0.2s; z-index: 300; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -519,6 +551,11 @@ canvas { width: 100% !important; }
       <div><span class="breakdown-label">含み損益</span></div>
       <div class="breakdown-val" id="h-unrealized" style="font-size:16px">―</div>
     </div>
+  </div>
+
+  <!-- 目標金額進捗バー -->
+  <div id="goal-card-wrap">
+    <!-- JS で動的生成 -->
   </div>
 
   <!-- 年切り替え -->
@@ -666,6 +703,18 @@ canvas { width: 100% !important; }
     <div style="font-size:10px;color:var(--light);margin-top:4px">高値からの下落率</div>
   </div>
 
+  <!-- 価格推移グラフ -->
+  <div class="price-chart-card" id="price-chart-card" style="display:none">
+    <div class="price-chart-title">📊 基準価額の推移（直近1ヶ月）</div>
+    <div class="chart-wrap">
+      <canvas id="price-history-chart" height="160"></canvas>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mid);margin-top:8px">
+      <span id="price-chart-min">―</span>
+      <span id="price-chart-max">―</span>
+    </div>
+  </div>
+
   <div class="section-title">📉 下落ラインと追加投資額<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">高値基準価格ベース</span></div>
   <div class="card" id="dip-levels-card"></div>
 
@@ -753,14 +802,36 @@ canvas { width: 100% !important; }
   <div class="card">
     <div class="change-form-title">＋ 積立額を変更する</div>
     <div class="ob-form-group">
+      <label class="ob-label">変更開始月</label>
+      <div class="ob-input-row">
+        <select class="ob-select" id="new-tsumitate-year" style="flex:1"></select>
+        <span class="ob-unit">年</span>
+        <select class="ob-select" id="new-tsumitate-month" style="flex:1"></select>
+        <span class="ob-unit">月から</span>
+      </div>
+    </div>
+    <div class="ob-form-group">
       <label class="ob-label">新しい積立額</label>
       <div class="ob-input-row">
         <input class="ob-input" type="number" id="new-tsumitate-amount" step="1000" placeholder="50000">
         <span class="ob-unit">円</span>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--mid);margin-bottom:10px">※ 変更月は今月として記録されます</div>
     <button class="ob-start-btn" style="font-size:14px;padding:12px" onclick="changeTsumitatAmount()">変更を記録する</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎯 目標金額の設定</div>
+    <div style="font-size:12px;color:var(--mid);margin-bottom:10px">シミュレーションタブの進捗バーに反映されます</div>
+    <div class="ob-form-group">
+      <label class="ob-label">目標金額</label>
+      <div class="ob-input-row">
+        <input class="ob-input" type="number" id="goal-amount-input" placeholder="30000000" step="1000000">
+        <span class="ob-unit">円</span>
+      </div>
+    </div>
+    <button class="ob-start-btn" style="font-size:14px;padding:12px" onclick="saveGoalAmount()">設定する</button>
+    <div id="goal-current-setting" style="margin-top:10px;font-size:12px;color:var(--mid);text-align:center"></div>
   </div>
 
   <div class="card" style="margin-top:4px">
@@ -843,6 +914,8 @@ const STORAGE_KEYS = Object.freeze({
   CYCLE_STATUS:       'nisa-cycle-status',
   NOTIF_PREFIX:       'nisa-last-notif-',
   HOLDINGS:           'nisa-holdings',       // 保有データ（CSVインポート）
+  GOAL_AMOUNT:        'nisa-goal-amount',    // 目標金額
+  PRICE_HISTORY:      'nisa-price-history',  // 基準価額履歴
 });
 
 // ════════════════════════════════════════
@@ -1008,16 +1081,31 @@ function resetAll() {
 
 // ── 積立額変更 ──
 function changeTsumitatAmount() {
+  const year   = parseInt(document.getElementById('new-tsumitate-year').value);
+  const month  = parseInt(document.getElementById('new-tsumitate-month').value);
   const amount = parseInt(document.getElementById('new-tsumitate-amount').value);
+
+  if (!year || !month) { showToast('変更開始月を選択してください'); return; }
   if (!amount || amount < 1000) { showToast('正しい金額を入力してください'); return; }
-  const now = new Date();
+
   const history = loadTsumitatHistory() || [];
-  history.push({ year: now.getFullYear(), month: now.getMonth() + 1, amount });
+
+  // 同じ年月がすでに存在する場合は上書き
+  const existIdx = history.findIndex(h => h.year === year && h.month === month);
+  if (existIdx >= 0) {
+    history[existIdx].amount = amount;
+  } else {
+    history.push({ year, month, amount });
+  }
+
+  // 年月順にソート
+  history.sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
+
   saveTsumitatHistory(history);
   document.getElementById('new-tsumitate-amount').value = '';
   renderSettingsPage();
   renderYearView();
-  showToast('✅ 積立額を変更しました：' + amount.toLocaleString() + '円/月');
+  showToast(`✅ ${year}年${month}月から ${amount.toLocaleString()}円/月に変更しました`);
 }
 
 // 指定年月時点の積立額を取得
@@ -1034,20 +1122,42 @@ function getTsumitatAmountAt(year, month) {
 
 // ── 設定ページ描画 ──
 function renderSettingsPage() {
-  const cfg = loadUserConfig();
-  if (!cfg) return;
+  // 年月セレクトを初期化
+  const cfg = getConfig();
+  const now = new Date();
+  const yearSel = document.getElementById('new-tsumitate-year');
+  const monthSel = document.getElementById('new-tsumitate-month');
+  if (yearSel) {
+    yearSel.innerHTML = '';
+    for (let y = cfg.startYear; y <= now.getFullYear() + 1; y++) {
+      yearSel.innerHTML += `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`;
+    }
+  }
+  if (monthSel) {
+    monthSel.innerHTML = '';
+    for (let m = 1; m <= 12; m++) {
+      monthSel.innerHTML += `<option value="${m}" ${m === now.getMonth() + 1 ? 'selected' : ''}>${m}</option>`;
+    }
+  }
+  const userCfg = loadUserConfig();
+  if (!userCfg) return;
   const history = loadTsumitatHistory() || [];
   const current = history[history.length - 1];
 
   document.getElementById('settings-summary').innerHTML = `
-    <div class="setting-row"><span class="setting-label">積立開始</span><span class="setting-val">${cfg.startYear}年${cfg.startMonth}月</span></div>
-    <div class="setting-row"><span class="setting-label">積立日</span><span class="setting-val">毎月${cfg.tsumitatDay}日</span></div>
+    <div class="setting-row"><span class="setting-label">積立開始</span><span class="setting-val">${userCfg.startYear}年${userCfg.startMonth}月</span></div>
+    <div class="setting-row"><span class="setting-label">積立日</span><span class="setting-val">毎月${userCfg.tsumitatDay}日</span></div>
     <div class="setting-row"><span class="setting-label">現在の積立額</span><span class="setting-val">${current ? current.amount.toLocaleString() : '―'}円/月</span></div>
-    <div class="setting-row"><span class="setting-label">成長枠（初期）</span><span class="setting-val">${cfg.growthAmount.toLocaleString()}円（${cfg.growthYear}年${cfg.growthMonth}月）</span></div>
-    <div class="setting-row"><span class="setting-label">高値基準価格</span><span class="setting-val">${cfg.highPrice.toLocaleString()}円</span></div>
+    <div class="setting-row"><span class="setting-label">成長枠（初期）</span><span class="setting-val">${userCfg.growthAmount.toLocaleString()}円（${userCfg.growthYear}年${userCfg.growthMonth}月）</span></div>
+    <div class="setting-row"><span class="setting-label">高値基準価格</span><span class="setting-val">${userCfg.highPrice.toLocaleString()}円</span></div>
   `;
 
-  const card = document.getElementById('tsumitate-history-card');
+  // 目標金額の現在値を表示
+  const goalEl = document.getElementById('goal-current-setting');
+  const goalAmountInput = document.getElementById('goal-amount-input');
+  const goal = loadGoalAmount();
+  if (goalEl) goalEl.textContent = goal ? `現在の設定：${goal.toLocaleString()}円` : '未設定';
+  if (goalAmountInput && goal) goalAmountInput.value = goal;
   if (!history.length) {
     card.innerHTML = '<div style="text-align:center;color:var(--light);font-size:13px;padding:16px">履歴なし</div>';
     return;
@@ -1296,6 +1406,7 @@ function initApp() {
   setTimeout(() => renderCanvas('main-chart', (c,W) => drawMainChart(undefined, c, W)), 50);
   checkNotifBanner();
   renderHoldings();
+  renderGoalProgress();
   fetchLatestPrice();
 }
 
@@ -1332,6 +1443,7 @@ function gotoPage(id, btn) {
     dipYears = parseInt(document.getElementById('dip-year-slider').value);
     document.getElementById('dip-year-val').textContent = dipYears + '年後';
     renderDipCompareTable();
+    renderPriceChart();
     setTimeout(() => renderCanvas('dip-chart', (c,W) => drawDipChart(c, W)), 100);
   }
   if (id === 'rules') renderRules();
@@ -1561,6 +1673,70 @@ function updateCurrentPrice() {
   showToast('💹 現在の基準価格を更新しました：' + v.toLocaleString() + '円');
 }
 
+// ── 目標金額管理 ──
+
+/**
+ * 目標金額を読み込む
+ * @returns {number|null}
+ */
+function loadGoalAmount() {
+  const v = localStorage.getItem(STORAGE_KEYS.GOAL_AMOUNT);
+  return v ? parseInt(v) : null;
+}
+
+/**
+ * 目標金額を保存して描画を更新する
+ */
+function saveGoalAmount() {
+  const input = document.getElementById('goal-amount-input');
+  const v = parseInt(input.value);
+  if (!v || v < 100_000) { showToast('正しい目標金額を入力してください'); return; }
+  localStorage.setItem(STORAGE_KEYS.GOAL_AMOUNT, v);
+  renderGoalProgress();
+  renderSettingsPage();
+  showToast('🎯 目標金額を設定しました：' + v.toLocaleString() + '円');
+}
+
+/**
+ * 目標金額進捗バーを描画する
+ */
+function renderGoalProgress() {
+  const wrap = document.getElementById('goal-card-wrap');
+  if (!wrap) return;
+
+  const goal    = loadGoalAmount();
+  const holdings = loadHoldings();
+
+  // 目標未設定
+  if (!goal) {
+    wrap.innerHTML = '<div class="goal-no-data">🎯 設定タブから目標金額を設定すると進捗が表示されます</div>';
+    return;
+  }
+
+  // CSV未取込
+  if (!holdings) {
+    wrap.innerHTML = '<div class="goal-no-data">📥 楽天証券CSVを取り込むと実際の評価額で進捗が表示されます</div>';
+    return;
+  }
+
+  const totalEval = holdings.tsumitate.evalAmt + holdings.growth.evalAmt;
+  const pct = Math.min(100, (totalEval / goal) * 100);
+  const remain = Math.max(0, goal - totalEval);
+
+  wrap.innerHTML = `
+    <div class="goal-card">
+      <div class="goal-label">🎯 目標金額への進捗（${holdings.importedAt}時点）</div>
+      <div class="goal-current">${totalEval.toLocaleString()}円</div>
+      <div class="goal-target">目標：${goal.toLocaleString()}円</div>
+      <div class="goal-pct">${pct.toFixed(1)}%</div>
+      <div class="goal-bar-wrap">
+        <div class="goal-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="goal-remain">あと ${remain.toLocaleString()}円</div>
+    </div>
+  `;
+}
+
 // ── 保有データ管理（CSVインポート）──
 
 /**
@@ -1698,6 +1874,7 @@ function importCSV(input) {
     }
     saveHoldings(data);
     renderHoldings();
+    renderGoalProgress();
     statusEl.style.color = 'var(--green)';
     statusEl.textContent = `✅ インポート完了（${data.importedAt}時点のデータ）`;
     showToast('📥 CSVをインポートしました');
@@ -1750,6 +1927,114 @@ function renderHoldings() {
   gainEl.textContent = `${sign}${totalGain.toLocaleString()}円（${sign}${gainPct.toFixed(2)}%）`;
   gainEl.style.color = totalGain >= 0 ? 'var(--green)' : 'var(--red)';
 }
+
+/**
+ * 基準価額の推移グラフを描画する
+ */
+function renderPriceChart() {
+  const raw = localStorage.getItem(STORAGE_KEYS.PRICE_HISTORY);
+  const card = document.getElementById('price-chart-card');
+  if (!raw || !card) return;
+
+  let history = JSON.parse(raw);
+  if (!history || history.length === 0) { card.style.display = 'none'; return; }
+
+  // 直近30件（約1ヶ月分）に絞る
+  history = history.slice(-30);
+  card.style.display = 'block';
+
+  const canvas = document.getElementById('price-history-chart');
+  if (!canvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.min(window.innerWidth, 430) - 64;
+  const H = 160;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const prices = history.map(h => h.price);
+  const dates  = history.map(h => h.date);
+  const minP = Math.min(...prices);
+  const maxP = Math.max(...prices);
+  const range = maxP - minP || 1;
+
+  const pad = { top: 16, right: 12, bottom: 24, left: 56 };
+  const w = W - pad.left - pad.right;
+  const h = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // グリッド（3本）
+  for (let i = 0; i <= 2; i++) {
+    const y = pad.top + (h / 2) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + w, y);
+    ctx.strokeStyle = '#dde8e3'; ctx.lineWidth = 0.5; ctx.stroke();
+    const val = Math.round(maxP - (range / 2) * i);
+    ctx.fillStyle = '#5a7268'; ctx.font = '10px Noto Sans JP';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toLocaleString(), pad.left - 4, y + 4);
+  }
+
+  // 高値基準価格ライン（点線）
+  if (highPrice >= minP && highPrice <= maxP) {
+    const hy = pad.top + (1 - (highPrice - minP) / range) * h;
+    ctx.beginPath(); ctx.moveTo(pad.left, hy); ctx.lineTo(pad.left + w, hy);
+    ctx.strokeStyle = 'rgba(200,146,42,0.6)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(200,146,42,0.9)'; ctx.font = '9px Noto Sans JP';
+    ctx.textAlign = 'left';
+    ctx.fillText('高値', pad.left + 4, hy - 3);
+  }
+
+  // X軸ラベル（最初・中間・最後）
+  [0, Math.floor((history.length - 1) / 2), history.length - 1].forEach(i => {
+    const x = pad.left + (i / (history.length - 1)) * w;
+    const d = dates[i].split('/');
+    ctx.fillStyle = '#5a7268'; ctx.font = '9px Noto Sans JP';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${d[1]}/${d[2]}`, x, H - 4);
+  });
+
+  // グラデーション塗り
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + h);
+  grad.addColorStop(0, 'rgba(45,158,111,0.25)');
+  grad.addColorStop(1, 'rgba(45,158,111,0)');
+  ctx.beginPath();
+  history.forEach((item, i) => {
+    const x = pad.left + (i / (history.length - 1)) * w;
+    const y = pad.top + (1 - (item.price - minP) / range) * h;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(pad.left + w, pad.top + h);
+  ctx.lineTo(pad.left, pad.top + h);
+  ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // 折れ線
+  ctx.beginPath();
+  history.forEach((item, i) => {
+    const x = pad.left + (i / (history.length - 1)) * w;
+    const y = pad.top + (1 - (item.price - minP) / range) * h;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#2d9e6f'; ctx.lineWidth = 2;
+  ctx.lineJoin = 'round'; ctx.stroke();
+
+  // 最新価格の点
+  const lastX = pad.left + w;
+  const lastY = pad.top + (1 - (prices[prices.length - 1] - minP) / range) * h;
+  ctx.beginPath(); ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a6b4a'; ctx.fill();
+
+  // 最小・最大表示
+  const minEl = document.getElementById('price-chart-min');
+  const maxEl = document.getElementById('price-chart-max');
+  if (minEl) minEl.textContent = `最安 ${minP.toLocaleString()}円`;
+  if (maxEl) maxEl.textContent = `最高 ${maxP.toLocaleString()}円`;
+}
+
 function checkDipAlert() {
   const banner = document.getElementById('dip-alert-banner');
   const titleEl = document.getElementById('dip-alert-title');
@@ -1987,8 +2272,13 @@ async function fetchLatestPrice() {
         const d = data.date.split('/');
         dateLabel.textContent = `${d[1]}月${d[2]}日時点の最新価格`;
       }
+      // 価格履歴をLocalStorageに保存
+      if (data.history && data.history.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.PRICE_HISTORY, JSON.stringify(data.history));
+        renderPriceChart();
+      }
       renderDipLevels();
-      checkDipAlert(); // 下落チェック
+      checkDipAlert();
       showToast('📈 基準価額を更新しました：' + basePrice.toLocaleString() + '円');
     }
   } catch(e) { console.log('価格取得失敗'); }
