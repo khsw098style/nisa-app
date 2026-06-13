@@ -169,10 +169,10 @@ canvas { width: 100% !important; }
 .add-btn-full:active { background: #3d7a75; }
 
 /* 価格入力 */
-.price-input-wrap { display: flex; align-items: center; gap: 8px; }
-.price-input { flex: 1; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: var(--font); background: var(--bg); color: var(--charcoal); outline: none; }
+.price-input-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.price-input { flex: 1; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: var(--font); background: var(--bg); color: var(--charcoal); outline: none; }
 .price-input:focus { border-color: var(--green); }
-.price-update-btn { background: var(--green); color: white; border: none; border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font); white-space: nowrap; }
+.price-update-btn { flex-shrink: 0; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font); white-space: nowrap; }
 
 /* ルール */
 .rule-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -694,7 +694,7 @@ canvas { width: 100% !important; }
     <div class="card-title">💹 現在の基準価格<span style="font-size:11px;color:var(--mid);font-weight:400;margin-left:6px">自動取得</span></div>
     <div class="price-input-wrap">
       <input class="price-input" type="number" id="base-price-input" value="35500">
-      <button class="price-update-btn" onclick="updateCurrentPrice()">手動更新</button>
+      <button class="price-update-btn" onclick="updateCurrentPrice()">更新</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
       <div style="font-size:11px;color:var(--mid)" id="current-price-date">自動取得中...</div>
